@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Pusula",
+    "slug": "pusula-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#3b82f6"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pusula.mobile"
+    },
+    "android": {
+      "package": "com.pusula.mobile"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": []
+  }
+}
