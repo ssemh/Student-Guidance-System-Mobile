@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
+import { useTheme } from '../contexts/ThemeContext';
 
 
 interface Note {
@@ -28,6 +29,7 @@ interface Note {
 }
 
 export default function BoardScreen() {
+  const { colors: themeColors } = useTheme();
   const [notes, setNotes] = useState<Note[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -256,7 +258,7 @@ export default function BoardScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <LinearGradient
         colors={['#3b82f6', '#1e40af', '#7c3aed']}
         start={{ x: 0, y: 0 }}
@@ -431,7 +433,7 @@ export default function BoardScreen() {
             padding: 20
           }}>
             <View style={{
-              backgroundColor: 'white',
+              backgroundColor: themeColors.surface,
               borderRadius: 20,
               width: '100%',
               maxHeight: '80%',
@@ -445,20 +447,20 @@ export default function BoardScreen() {
               <View style={{
                 padding: 20,
                 borderBottomWidth: 1,
-                borderBottomColor: '#e5e7eb',
+                borderBottomColor: themeColors.border,
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}>
-                <Text style={{fontSize: 20, fontWeight: 'bold', color: '#1f2937'}}>Pano Özelleştir</Text>
+                <Text style={{fontSize: 20, fontWeight: 'bold', color: themeColors.text}}>Pano Özelleştir</Text>
                 <TouchableOpacity onPress={() => setShowCustomizeModal(false)}>
-                  <Ionicons name="close" size={24} color="#6b7280" />
+                  <Ionicons name="close" size={24} color={themeColors.textSecondary} />
                 </TouchableOpacity>
               </View>
 
-              <ScrollView style={{maxHeight: 400, padding: 20}} showsVerticalScrollIndicator={false}>
+              <ScrollView style={{maxHeight: 400, padding: 20, backgroundColor: themeColors.surface}} showsVerticalScrollIndicator={false}>
             <View style={{marginBottom: 30}}>
-              <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#1f2937'}}>
+              <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: themeColors.text}}>
                 Pano Rengi
               </Text>
               <View style={{flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 15}}>
@@ -480,18 +482,18 @@ export default function BoardScreen() {
             </View>
 
             <View style={{marginBottom: 30}}>
-              <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#1f2937'}}>
+              <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: themeColors.text}}>
                 Pano Resmi
               </Text>
               <View style={{alignItems: 'center'}}>
                 <TouchableOpacity 
                   style={{
-                    backgroundColor: '#f3f4f6',
+                    backgroundColor: themeColors.card,
                     paddingHorizontal: 20,
                     paddingVertical: 15,
                     borderRadius: 10,
                     borderWidth: 2,
-                    borderColor: '#d1d5db',
+                    borderColor: themeColors.border,
                     borderStyle: 'dashed',
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -539,7 +541,7 @@ export default function BoardScreen() {
             </View>
 
             <View style={{marginBottom: 30}}>
-              <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#1f2937'}}>
+              <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: themeColors.text}}>
                 Çerçeve Rengi
               </Text>
               <View style={{flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 15}}>
@@ -561,7 +563,7 @@ export default function BoardScreen() {
             </View>
 
             <View style={{marginBottom: 30}}>
-              <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#1f2937'}}>
+              <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: themeColors.text}}>
                 Not Kağıdı Rengi
               </Text>
               <View style={{flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 15}}>
@@ -583,7 +585,7 @@ export default function BoardScreen() {
             </View>
 
             <View style={{marginBottom: 30}}>
-              <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#1f2937'}}>
+              <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: themeColors.text}}>
                 Yazı Rengi
               </Text>
               <View style={{flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 15}}>
@@ -605,7 +607,7 @@ export default function BoardScreen() {
             </View>
 
             <View style={{marginBottom: 30}}>
-              <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#1f2937'}}>
+              <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: themeColors.text}}>
                 Yazı Tipi
               </Text>
               <View style={{flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10}}>
@@ -615,17 +617,17 @@ export default function BoardScreen() {
                     style={{
                       paddingHorizontal: 15,
                       paddingVertical: 10,
-                      backgroundColor: fontFamily === font ? '#3b82f6' : '#f3f4f6',
+                      backgroundColor: fontFamily === font ? '#3b82f6' : themeColors.card,
                       borderRadius: 20,
                       borderWidth: fontFamily === font ? 2 : 1,
-                      borderColor: fontFamily === font ? '#1d4ed8' : '#d1d5db'
+                      borderColor: fontFamily === font ? '#1d4ed8' : themeColors.border
                     }}
                     onPress={() => setFontFamily(font)}
                   >
                     <Text style={{
                       fontSize: 14,
                       fontWeight: '500',
-                      color: fontFamily === font ? 'white' : '#374151',
+                      color: fontFamily === font ? 'white' : themeColors.text,
                       fontFamily: font
                     }}>
                       {font}
@@ -636,7 +638,7 @@ export default function BoardScreen() {
             </View>
               </ScrollView>
 
-              <View style={{padding: 20, backgroundColor: 'white', borderTopWidth: 1, borderTopColor: '#e5e7eb'}}>
+              <View style={{padding: 20, backgroundColor: themeColors.surface, borderTopWidth: 1, borderTopColor: themeColors.border}}>
                 <TouchableOpacity
                   style={{
                     backgroundColor: '#3b82f6',
