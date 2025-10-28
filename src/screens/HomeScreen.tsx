@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as DocumentPicker from 'expo-document-picker';
 import { Audio } from 'expo-av';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Tam Ekran TYT Deneme Bileşeni
 function FullscreenTYTPracticeView({ onClose }: { onClose: () => void }) {
@@ -384,6 +385,7 @@ function FullscreenStopwatchView({ onClose }: { onClose: () => void }) {
 
 // Kronometre Bileşeni
 function StopwatchView({ onBack, onFullscreen }: { onBack: () => void; onFullscreen: () => void }) {
+  const { colors } = useTheme();
   const [time, setTime] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -429,28 +431,28 @@ function StopwatchView({ onBack, onFullscreen }: { onBack: () => void; onFullscr
   const formattedTime = formatTime(time);
 
   return (
-    <View style={styles.stopwatchContainer}>
+    <View style={[styles.stopwatchContainer, { backgroundColor: colors.card }]}>
       {/* Kronometre Gösterimi */}
       <View style={styles.timeContainerWithLabels}>
         <View style={styles.timeAndLabelWrapper}>
-          <View style={styles.timeCircle}>
-            <Text style={styles.timeText}>{formattedTime.hours}</Text>
+          <View style={[styles.timeCircle, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.timeText, { color: colors.text }]}>{formattedTime.hours}</Text>
           </View>
-          <Text style={styles.labelTextSmall}>Saat</Text>
+          <Text style={[styles.labelTextSmall, { color: colors.textSecondary }]}>Saat</Text>
         </View>
-        <Text style={styles.separator}>:</Text>
+        <Text style={[styles.separator, { color: colors.text }]}>:</Text>
         <View style={styles.timeAndLabelWrapper}>
-          <View style={styles.timeCircle}>
-            <Text style={styles.timeText}>{formattedTime.minutes}</Text>
+          <View style={[styles.timeCircle, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.timeText, { color: colors.text }]}>{formattedTime.minutes}</Text>
           </View>
-          <Text style={styles.labelTextSmall}>Dakika</Text>
+          <Text style={[styles.labelTextSmall, { color: colors.textSecondary }]}>Dakika</Text>
         </View>
-        <Text style={styles.separator}>:</Text>
+        <Text style={[styles.separator, { color: colors.text }]}>:</Text>
         <View style={styles.timeAndLabelWrapper}>
-          <View style={styles.timeCircle}>
-            <Text style={styles.timeText}>{formattedTime.seconds}</Text>
+          <View style={[styles.timeCircle, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.timeText, { color: colors.text }]}>{formattedTime.seconds}</Text>
           </View>
-          <Text style={styles.labelTextSmall}>Saniye</Text>
+          <Text style={[styles.labelTextSmall, { color: colors.textSecondary }]}>Saniye</Text>
         </View>
       </View>
 
@@ -499,6 +501,7 @@ function StopwatchView({ onBack, onFullscreen }: { onBack: () => void; onFullscr
 
 // TYT Geri Sayım Bileşeni
 function TYTCountdownView({ onBack }: { onBack: () => void }) {
+  const { colors } = useTheme();
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const targetDate = new Date('2026-06-20T00:00:00');
 
@@ -526,35 +529,35 @@ function TYTCountdownView({ onBack }: { onBack: () => void }) {
   }, []);
 
   return (
-    <View style={styles.stopwatchContainer}>
+    <View style={[styles.stopwatchContainer, { backgroundColor: colors.card }]}>
       {/* Zaman Gösterimi */}
       <View style={styles.timeContainer}>
-        <View style={styles.smallTimeCircle}>
-          <Text style={styles.smallTimeText}>{timeLeft.days}</Text>
+        <View style={[styles.smallTimeCircle, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.smallTimeText, { color: colors.text }]}>{timeLeft.days}</Text>
         </View>
-        <Text style={styles.smallSeparator}>:</Text>
-        <View style={styles.smallTimeCircle}>
-          <Text style={styles.smallTimeText}>{timeLeft.hours}</Text>
+        <Text style={[styles.smallSeparator, { color: colors.text }]}>:</Text>
+        <View style={[styles.smallTimeCircle, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.smallTimeText, { color: colors.text }]}>{timeLeft.hours}</Text>
         </View>
-        <Text style={styles.smallSeparator}>:</Text>
-        <View style={styles.smallTimeCircle}>
-          <Text style={styles.smallTimeText}>{timeLeft.minutes}</Text>
+        <Text style={[styles.smallSeparator, { color: colors.text }]}>:</Text>
+        <View style={[styles.smallTimeCircle, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.smallTimeText, { color: colors.text }]}>{timeLeft.minutes}</Text>
         </View>
-        <Text style={styles.smallSeparator}>:</Text>
-        <View style={styles.smallTimeCircle}>
-          <Text style={styles.smallTimeText}>{timeLeft.seconds}</Text>
+        <Text style={[styles.smallSeparator, { color: colors.text }]}>:</Text>
+        <View style={[styles.smallTimeCircle, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.smallTimeText, { color: colors.text }]}>{timeLeft.seconds}</Text>
         </View>
       </View>
 
       {/* Etiketler */}
       <View style={styles.labelContainer}>
-        <Text style={styles.smallLabelText}>Gün</Text>
-        <Text style={styles.smallLabelSeparator}>:</Text>
-        <Text style={styles.smallLabelText}>Saat</Text>
-        <Text style={styles.smallLabelSeparator}>:</Text>
-        <Text style={styles.smallLabelText}>Dakika</Text>
-        <Text style={styles.smallLabelSeparator}>:</Text>
-        <Text style={styles.smallLabelText}>Saniye</Text>
+        <Text style={[styles.smallLabelText, { color: colors.textSecondary }]}>Gün</Text>
+        <Text style={[styles.smallLabelSeparator, { color: colors.textSecondary }]}>:</Text>
+        <Text style={[styles.smallLabelText, { color: colors.textSecondary }]}>Saat</Text>
+        <Text style={[styles.smallLabelSeparator, { color: colors.textSecondary }]}>:</Text>
+        <Text style={[styles.smallLabelText, { color: colors.textSecondary }]}>Dakika</Text>
+        <Text style={[styles.smallLabelSeparator, { color: colors.textSecondary }]}>:</Text>
+        <Text style={[styles.smallLabelText, { color: colors.textSecondary }]}>Saniye</Text>
       </View>
 
       {/* Geri Butonu */}
@@ -568,6 +571,7 @@ function TYTCountdownView({ onBack }: { onBack: () => void }) {
 
 // AYT Geri Sayım Bileşeni
 function AYTCountdownView({ onBack }: { onBack: () => void }) {
+  const { colors } = useTheme();
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const targetDate = new Date('2026-06-21T00:00:00');
 
@@ -595,35 +599,35 @@ function AYTCountdownView({ onBack }: { onBack: () => void }) {
   }, []);
 
   return (
-    <View style={styles.stopwatchContainer}>
+    <View style={[styles.stopwatchContainer, { backgroundColor: colors.card }]}>
       {/* Zaman Gösterimi */}
       <View style={styles.timeContainer}>
-        <View style={styles.smallTimeCircle}>
-          <Text style={styles.smallTimeText}>{timeLeft.days}</Text>
+        <View style={[styles.smallTimeCircle, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.smallTimeText, { color: colors.text }]}>{timeLeft.days}</Text>
         </View>
-        <Text style={styles.smallSeparator}>:</Text>
-        <View style={styles.smallTimeCircle}>
-          <Text style={styles.smallTimeText}>{timeLeft.hours}</Text>
+        <Text style={[styles.smallSeparator, { color: colors.text }]}>:</Text>
+        <View style={[styles.smallTimeCircle, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.smallTimeText, { color: colors.text }]}>{timeLeft.hours}</Text>
         </View>
-        <Text style={styles.smallSeparator}>:</Text>
-        <View style={styles.smallTimeCircle}>
-          <Text style={styles.smallTimeText}>{timeLeft.minutes}</Text>
+        <Text style={[styles.smallSeparator, { color: colors.text }]}>:</Text>
+        <View style={[styles.smallTimeCircle, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.smallTimeText, { color: colors.text }]}>{timeLeft.minutes}</Text>
         </View>
-        <Text style={styles.smallSeparator}>:</Text>
-        <View style={styles.smallTimeCircle}>
-          <Text style={styles.smallTimeText}>{timeLeft.seconds}</Text>
+        <Text style={[styles.smallSeparator, { color: colors.text }]}>:</Text>
+        <View style={[styles.smallTimeCircle, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.smallTimeText, { color: colors.text }]}>{timeLeft.seconds}</Text>
         </View>
       </View>
 
       {/* Etiketler */}
       <View style={styles.labelContainer}>
-        <Text style={styles.smallLabelText}>Gün</Text>
-        <Text style={styles.smallLabelSeparator}>:</Text>
-        <Text style={styles.smallLabelText}>Saat</Text>
-        <Text style={styles.smallLabelSeparator}>:</Text>
-        <Text style={styles.smallLabelText}>Dakika</Text>
-        <Text style={styles.smallLabelSeparator}>:</Text>
-        <Text style={styles.smallLabelText}>Saniye</Text>
+        <Text style={[styles.smallLabelText, { color: colors.textSecondary }]}>Gün</Text>
+        <Text style={[styles.smallLabelSeparator, { color: colors.textSecondary }]}>:</Text>
+        <Text style={[styles.smallLabelText, { color: colors.textSecondary }]}>Saat</Text>
+        <Text style={[styles.smallLabelSeparator, { color: colors.textSecondary }]}>:</Text>
+        <Text style={[styles.smallLabelText, { color: colors.textSecondary }]}>Dakika</Text>
+        <Text style={[styles.smallLabelSeparator, { color: colors.textSecondary }]}>:</Text>
+        <Text style={[styles.smallLabelText, { color: colors.textSecondary }]}>Saniye</Text>
       </View>
 
       {/* Geri Butonu */}
@@ -645,6 +649,7 @@ function CustomCountdownView({
   onFullscreen: (duration: number) => void;
   customDuration: number;
 }) {
+  const { colors } = useTheme();
   const [timeLeft, setTimeLeft] = useState(customDuration * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [selectedSound, setSelectedSound] = useState<{ uri: string; name: string } | null>(null);
@@ -744,29 +749,29 @@ function CustomCountdownView({
   const formattedTime = formatTime(timeLeft);
 
   return (
-    <View style={styles.stopwatchContainer}>
+    <View style={[styles.stopwatchContainer, { backgroundColor: colors.card }]}>
       {/* Zaman Gösterimi */}
       <View style={styles.timeContainer}>
-        <View style={styles.timeCircle}>
-          <Text style={styles.timeText}>{formattedTime.hours}</Text>
+        <View style={[styles.timeCircle, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.timeText, { color: colors.text }]}>{formattedTime.hours}</Text>
         </View>
-        <Text style={styles.separator}>:</Text>
-        <View style={styles.timeCircle}>
-          <Text style={styles.timeText}>{formattedTime.minutes}</Text>
+        <Text style={[styles.separator, { color: colors.text }]}>:</Text>
+        <View style={[styles.timeCircle, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.timeText, { color: colors.text }]}>{formattedTime.minutes}</Text>
         </View>
-        <Text style={styles.separator}>:</Text>
-        <View style={styles.timeCircle}>
-          <Text style={styles.timeText}>{formattedTime.seconds}</Text>
+        <Text style={[styles.separator, { color: colors.text }]}>:</Text>
+        <View style={[styles.timeCircle, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.timeText, { color: colors.text }]}>{formattedTime.seconds}</Text>
         </View>
       </View>
 
       {/* Etiketler */}
       <View style={styles.labelContainer}>
-        <Text style={styles.labelText}>Saat</Text>
-        <Text style={styles.labelSeparator}>:</Text>
-        <Text style={styles.labelText}>Dakika</Text>
-        <Text style={styles.labelSeparator}>:</Text>
-        <Text style={styles.labelText}>Saniye</Text>
+        <Text style={[styles.labelText, { color: colors.textSecondary }]}>Saat</Text>
+        <Text style={[styles.labelSeparator, { color: colors.textSecondary }]}>:</Text>
+        <Text style={[styles.labelText, { color: colors.textSecondary }]}>Dakika</Text>
+        <Text style={[styles.labelSeparator, { color: colors.textSecondary }]}>:</Text>
+        <Text style={[styles.labelText, { color: colors.textSecondary }]}>Saniye</Text>
       </View>
 
       {/* Kontrol Butonları */}
@@ -830,6 +835,7 @@ function CustomCountdownSetup({
   onBack: () => void; 
   onStart: (duration: number) => void;
 }) {
+  const { colors } = useTheme();
   const [hours, setHours] = useState('0');
   const [minutes, setMinutes] = useState('0');
   const [seconds, setSeconds] = useState('0');
@@ -856,54 +862,54 @@ function CustomCountdownSetup({
   };
 
   return (
-    <View style={styles.stopwatchContainer}>
-      <Text style={styles.setupTitle}>Geri sayım süresini ayarlayın</Text>
+    <View style={[styles.stopwatchContainer, { backgroundColor: colors.card }]}>
+      <Text style={[styles.setupTitle, { color: colors.text }]}>Geri sayım süresini ayarlayın</Text>
       
       {/* Input Alanları */}
       <View style={styles.timeInputRow}>
         <View style={styles.timeInputWrapper}>
-          <Text style={styles.timeInputLabel}>Saat:</Text>
+          <Text style={[styles.timeInputLabel, { color: colors.text }]}>Saat:</Text>
           <TouchableOpacity 
-            style={styles.timeInputBox}
+            style={[styles.timeInputBox, { backgroundColor: colors.background }]}
             onPress={() => handleEdit('hours')}
           >
-            <Text style={styles.timeInputText}>{formatTime(hours)}</Text>
+            <Text style={[styles.timeInputText, { color: colors.text }]}>{formatTime(hours)}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.timeInputWrapper}>
-          <Text style={styles.timeInputLabel}>Dakika:</Text>
+          <Text style={[styles.timeInputLabel, { color: colors.text }]}>Dakika:</Text>
           <TouchableOpacity 
-            style={styles.timeInputBox}
+            style={[styles.timeInputBox, { backgroundColor: colors.background }]}
             onPress={() => handleEdit('minutes')}
           >
-            <Text style={styles.timeInputText}>{formatTime(minutes)}</Text>
+            <Text style={[styles.timeInputText, { color: colors.text }]}>{formatTime(minutes)}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.timeInputWrapper}>
-          <Text style={styles.timeInputLabel}>Saniye:</Text>
+          <Text style={[styles.timeInputLabel, { color: colors.text }]}>Saniye:</Text>
           <TouchableOpacity 
-            style={styles.timeInputBox}
+            style={[styles.timeInputBox, { backgroundColor: colors.background }]}
             onPress={() => handleEdit('seconds')}
           >
-            <Text style={styles.timeInputText}>{formatTime(seconds)}</Text>
+            <Text style={[styles.timeInputText, { color: colors.text }]}>{formatTime(seconds)}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Zaman Göstergesi */}
       <View style={styles.timeContainer}>
-        <View style={styles.timeCircle}>
-          <Text style={styles.timeText}>{formatTime(hours)}</Text>
+        <View style={[styles.timeCircle, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.timeText, { color: colors.text }]}>{formatTime(hours)}</Text>
         </View>
-        <Text style={styles.separator}>:</Text>
-        <View style={styles.timeCircle}>
-          <Text style={styles.timeText}>{formatTime(minutes)}</Text>
+        <Text style={[styles.separator, { color: colors.text }]}>:</Text>
+        <View style={[styles.timeCircle, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.timeText, { color: colors.text }]}>{formatTime(minutes)}</Text>
         </View>
-        <Text style={styles.separator}>:</Text>
-        <View style={styles.timeCircle}>
-          <Text style={styles.timeText}>{formatTime(seconds)}</Text>
+        <Text style={[styles.separator, { color: colors.text }]}>:</Text>
+        <View style={[styles.timeCircle, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.timeText, { color: colors.text }]}>{formatTime(seconds)}</Text>
         </View>
       </View>
 
@@ -916,14 +922,14 @@ function CustomCountdownSetup({
           onRequestClose={() => setIsEditing(false)}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>
+            <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
                 {editingType === 'hours' ? 'Saat Giriniz' : 
                  editingType === 'minutes' ? 'Dakika Giriniz' : 
                  'Saniye Giriniz'}
               </Text>
               <TextInput
-                style={styles.modalInput}
+                style={[styles.modalInput, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
                 placeholder="0"
                 value={editingType === 'hours' ? hours : editingType === 'minutes' ? minutes : seconds}
                 onChangeText={(value) => {
@@ -973,6 +979,7 @@ function CustomCountdownSetup({
 
 // AYT Deneme Geri Sayım Bileşeni
 function AYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFullscreen: () => void }) {
+  const { colors } = useTheme();
   const [timeLeft, setTimeLeft] = useState(180 * 60); // 180 dakika = 10800 saniye
   const [isRunning, setIsRunning] = useState(false);
   const [selectedSound, setSelectedSound] = useState<{ uri: string; name: string } | null>(null);
@@ -1077,21 +1084,21 @@ function AYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFulls
   const formattedTime = formatTime(timeLeft);
 
   return (
-    <View style={styles.stopwatchContainer}>
+    <View style={[styles.stopwatchContainer, { backgroundColor: colors.card }]}>
       {/* Zaman Gösterimi ve Etiketler */}
       <View style={styles.timeContainerWithLabels}>
         <View style={styles.timeAndLabelWrapper}>
-          <View style={styles.timeCircle}>
-            <Text style={styles.timeText}>{formattedTime.minutes}</Text>
+          <View style={[styles.timeCircle, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.timeText, { color: colors.text }]}>{formattedTime.minutes}</Text>
           </View>
-          <Text style={styles.labelTextSmall}>Dakika</Text>
+          <Text style={[styles.labelTextSmall, { color: colors.textSecondary }]}>Dakika</Text>
         </View>
-        <Text style={styles.separator}>:</Text>
+        <Text style={[styles.separator, { color: colors.text }]}>:</Text>
         <View style={styles.timeAndLabelWrapper}>
-          <View style={styles.timeCircle}>
-            <Text style={styles.timeText}>{formattedTime.seconds}</Text>
+          <View style={[styles.timeCircle, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.timeText, { color: colors.text }]}>{formattedTime.seconds}</Text>
           </View>
-          <Text style={styles.labelTextSmall}>Saniye</Text>
+          <Text style={[styles.labelTextSmall, { color: colors.textSecondary }]}>Saniye</Text>
         </View>
       </View>
 
@@ -1151,6 +1158,7 @@ function AYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFulls
 
 // TYT Deneme Geri Sayım Bileşeni
 function TYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFullscreen: () => void }) {
+  const { colors } = useTheme();
   const [timeLeft, setTimeLeft] = useState(165 * 60); // 165 dakika = 9900 saniye
   const [isRunning, setIsRunning] = useState(false);
   const [selectedSound, setSelectedSound] = useState<{ uri: string; name: string } | null>(null);
@@ -1255,21 +1263,21 @@ function TYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFulls
   const formattedTime = formatTime(timeLeft);
 
   return (
-    <View style={styles.stopwatchContainer}>
+    <View style={[styles.stopwatchContainer, { backgroundColor: colors.card }]}>
       {/* Zaman Gösterimi ve Etiketler */}
       <View style={styles.timeContainerWithLabels}>
         <View style={styles.timeAndLabelWrapper}>
-          <View style={styles.timeCircle}>
-            <Text style={styles.timeText}>{formattedTime.minutes}</Text>
+          <View style={[styles.timeCircle, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.timeText, { color: colors.text }]}>{formattedTime.minutes}</Text>
           </View>
-          <Text style={styles.labelTextSmall}>Dakika</Text>
+          <Text style={[styles.labelTextSmall, { color: colors.textSecondary }]}>Dakika</Text>
         </View>
-        <Text style={styles.separator}>:</Text>
+        <Text style={[styles.separator, { color: colors.text }]}>:</Text>
         <View style={styles.timeAndLabelWrapper}>
-          <View style={styles.timeCircle}>
-            <Text style={styles.timeText}>{formattedTime.seconds}</Text>
+          <View style={[styles.timeCircle, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.timeText, { color: colors.text }]}>{formattedTime.seconds}</Text>
           </View>
-          <Text style={styles.labelTextSmall}>Saniye</Text>
+          <Text style={[styles.labelTextSmall, { color: colors.textSecondary }]}>Saniye</Text>
         </View>
       </View>
 
@@ -1327,6 +1335,7 @@ function TYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFulls
 }
 
 export default function HomeScreen() {
+  const { colors } = useTheme();
   const navigation = useNavigation();
   const [showStopwatch, setShowStopwatch] = useState(false);
   const [showFullscreen, setShowFullscreen] = useState(false);
@@ -1425,7 +1434,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient
           colors={['#3b82f6', '#1e40af', '#7c3aed']}
@@ -1459,7 +1468,7 @@ export default function HomeScreen() {
         <View style={styles.content}>
           <View style={styles.statsCardHeader}>
             <Ionicons name="stopwatch" size={24} color="#1e40af" />
-            <Text style={styles.statsCardTitle}>
+            <Text style={[styles.statsCardTitle, { color: colors.text }]}>
               {activeCounter === 'stopwatch' ? 'Kronometre' 
                : activeCounter === 'tyt-countdown' ? 'TYT Geri Sayım' 
                : activeCounter === 'ayt-countdown' ? 'AYT Geri Sayım'
@@ -1471,55 +1480,55 @@ export default function HomeScreen() {
           </View>
           <View style={styles.statsCardHeaderLine} />
           
-          {!activeCounter ? (
+              {!activeCounter ? (
             /* Sayaç Butonları */
-            <View style={styles.countersCard}>
+            <View style={[styles.countersCard, { backgroundColor: colors.card }]}>
               <TouchableOpacity 
-                style={styles.counterButton}
+                style={[styles.counterButton, { backgroundColor: colors.background }]}
                 onPress={() => setActiveCounter('stopwatch')}
               >
                 <Ionicons name="stopwatch" size={22} color="#1e40af" />
-                <Text style={styles.counterButtonText}>Kronometre</Text>
+                <Text style={[styles.counterButtonText, { color: colors.text }]}>Kronometre</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={styles.counterButton}
+                style={[styles.counterButton, { backgroundColor: colors.background }]}
                 onPress={() => setActiveCounter('tyt-countdown')}
               >
                 <Ionicons name="calendar" size={22} color="#1e40af" />
-                <Text style={styles.counterButtonText}>TYT Geri Sayım</Text>
+                <Text style={[styles.counterButtonText, { color: colors.text }]}>TYT Geri Sayım</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={styles.counterButton}
+                style={[styles.counterButton, { backgroundColor: colors.background }]}
                 onPress={() => setActiveCounter('ayt-countdown')}
               >
                 <Ionicons name="calendar" size={22} color="#1e40af" />
-                <Text style={styles.counterButtonText}>AYT Geri Sayım</Text>
+                <Text style={[styles.counterButtonText, { color: colors.text }]}>AYT Geri Sayım</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={styles.counterButton}
+                style={[styles.counterButton, { backgroundColor: colors.background }]}
                 onPress={() => setActiveCounter('tyt-practice')}
               >
                 <Ionicons name="hourglass" size={22} color="#1e40af" />
-                <Text style={styles.counterButtonText}>TYT Deneme</Text>
+                <Text style={[styles.counterButtonText, { color: colors.text }]}>TYT Deneme</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={styles.counterButton}
+                style={[styles.counterButton, { backgroundColor: colors.background }]}
                 onPress={() => setActiveCounter('ayt-practice')}
               >
                 <Ionicons name="hourglass" size={22} color="#1e40af" />
-                <Text style={styles.counterButtonText}>AYT Deneme</Text>
+                <Text style={[styles.counterButtonText, { color: colors.text }]}>AYT Deneme</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={styles.counterButton}
+                style={[styles.counterButton, { backgroundColor: colors.background }]}
                 onPress={() => setActiveCounter('custom-countdown')}
               >
                 <Ionicons name="person-circle" size={22} color="#1e40af" />
-                <Text style={styles.counterButtonText}>Özel Geri Sayım</Text>
+                <Text style={[styles.counterButtonText, { color: colors.text }]}>Özel Geri Sayım</Text>
               </TouchableOpacity>
             </View>
           ) : activeCounter === 'stopwatch' ? (

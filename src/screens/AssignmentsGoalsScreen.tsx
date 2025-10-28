@@ -4,8 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function AssignmentsGoalsScreen() {
+  const { colors } = useTheme();
   const navigation = useNavigation<any>();
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [selectedDay, setSelectedDay] = useState(0); // 0 = Pazartesi, 6 = Pazar
@@ -252,7 +254,7 @@ export default function AssignmentsGoalsScreen() {
     return options;
   };
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient
           colors={['#3b82f6', '#1e40af', '#7c3aed']}

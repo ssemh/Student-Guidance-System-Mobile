@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface AnalysisResult {
   id: string;
@@ -28,6 +29,7 @@ interface AnalysisResult {
 }
 
 export default function AnalysisScreen() {
+  const { colors } = useTheme();
   const [analysisType, setAnalysisType] = useState<'konu' | 'deneme'>('konu');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('');
@@ -320,7 +322,7 @@ export default function AnalysisScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
         colors={['#3b82f6', '#1e40af', '#7c3aed']}
         start={{ x: 0, y: 0 }}
@@ -334,7 +336,7 @@ export default function AnalysisScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Analiz Türü Seçimi */}
         <View style={styles.analysisTypeSelector}>
-          <Text style={styles.sectionTitle}>Analiz Türü</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Analiz Türü</Text>
           <View style={styles.typeButtons}>
             <TouchableOpacity
               style={[
@@ -392,9 +394,9 @@ export default function AnalysisScreen() {
 
         {/* Ders Seçimi - Modal */}
         <View style={styles.dropdownSection}>
-          <Text style={styles.sectionTitle}>Ders Seç</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Ders Seç</Text>
           <TouchableOpacity
-            style={styles.dropdownButton}
+            style={[styles.dropdownButton, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={() => {
               setShowSubjectDropdown(true);
               setShowTopicDropdown(false);
@@ -402,6 +404,7 @@ export default function AnalysisScreen() {
           >
             <Text style={[
               styles.dropdownButtonText,
+              { color: colors.text },
               !selectedSubject && styles.placeholderText
             ]}>
               {selectedSubject || 'Ders seçiniz...'}
@@ -409,7 +412,7 @@ export default function AnalysisScreen() {
             <Ionicons 
               name="chevron-down" 
               size={20} 
-              color="#6b7280" 
+              color={colors.textSecondary}
             />
           </TouchableOpacity>
         </View>
@@ -426,14 +429,14 @@ export default function AnalysisScreen() {
             activeOpacity={1}
             onPress={() => setShowSubjectDropdown(false)}
           >
-            <View style={styles.modalContent}>
+            <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Ders Seçin</Text>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>Ders Seçin</Text>
                 <TouchableOpacity
                   onPress={() => setShowSubjectDropdown(false)}
                   style={styles.modalCloseButton}
                 >
-                  <Ionicons name="close" size={24} color="#6b7280" />
+                  <Ionicons name="close" size={24} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
               
@@ -441,7 +444,7 @@ export default function AnalysisScreen() {
                 {(analysisType === 'deneme' ? examSubjects : subjects).map((subject) => (
                   <TouchableOpacity
                     key={subject}
-                    style={styles.modalItem}
+                    style={[styles.modalItem, { backgroundColor: colors.surface }]}
                     onPress={() => {
                       setSelectedSubject(subject);
                       setSelectedTopic('');
@@ -449,7 +452,7 @@ export default function AnalysisScreen() {
                       setIsAnalyzed(false);
                     }}
                   >
-                    <Text style={styles.modalItemText}>{subject}</Text>
+                    <Text style={[styles.modalItemText, { color: colors.text }]}>{subject}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -460,9 +463,9 @@ export default function AnalysisScreen() {
         {/* Konu Seçimi - Modal (Sadece Konu Analizi için) */}
         {analysisType === 'konu' && (
           <View style={styles.dropdownSection}>
-            <Text style={styles.sectionTitle}>Konu Seç</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Konu Seç</Text>
             <TouchableOpacity
-              style={styles.dropdownButton}
+              style={[styles.dropdownButton, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => {
                 if (selectedSubject) {
                   setShowTopicDropdown(true);
@@ -472,6 +475,7 @@ export default function AnalysisScreen() {
             >
               <Text style={[
                 styles.dropdownButtonText,
+                { color: colors.text },
                 !selectedTopic && styles.placeholderText
               ]}>
                 {selectedTopic || (selectedSubject ? 'Konu seçiniz...' : 'Önce dersi seçiniz')}
@@ -479,7 +483,7 @@ export default function AnalysisScreen() {
               <Ionicons 
                 name="chevron-down" 
                 size={20} 
-                color="#6b7280" 
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
           </View>
@@ -497,14 +501,14 @@ export default function AnalysisScreen() {
             activeOpacity={1}
             onPress={() => setShowTopicDropdown(false)}
           >
-            <View style={styles.modalContent}>
+            <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Konu Seçin</Text>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>Konu Seçin</Text>
                 <TouchableOpacity
                   onPress={() => setShowTopicDropdown(false)}
                   style={styles.modalCloseButton}
                 >
-                  <Ionicons name="close" size={24} color="#6b7280" />
+                  <Ionicons name="close" size={24} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
               
@@ -512,14 +516,14 @@ export default function AnalysisScreen() {
                 {topics[selectedSubject as keyof typeof topics]?.map((topic) => (
                   <TouchableOpacity
                     key={topic}
-                    style={styles.modalItem}
+                    style={[styles.modalItem, { backgroundColor: colors.surface }]}
                     onPress={() => {
                       setSelectedTopic(topic);
                       setShowTopicDropdown(false);
                       setIsAnalyzed(false);
                     }}
                   >
-                    <Text style={styles.modalItemText}>{topic}</Text>
+                    <Text style={[styles.modalItemText, { color: colors.text }]}>{topic}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -530,29 +534,32 @@ export default function AnalysisScreen() {
         {/* Deneme Adı Girişi (Sadece Deneme Analizi için) */}
         {analysisType === 'deneme' && (
           <View style={styles.inputSection}>
-            <Text style={styles.sectionTitle}>Deneme Adı</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Deneme Adı</Text>
             
             {/* Manuel Giriş - Üstte */}
             <TextInput
-              style={styles.examNameInput}
+              style={[styles.examNameInput, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
               placeholder="Yeni deneme adı girin"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textSecondary}
               value={examName}
               onChangeText={setExamName}
             />
             
             {/* Kaydedilen Deneme Adları - Altta */}
             <TouchableOpacity
-              style={styles.examNameSelectButton}
+              style={[styles.examNameSelectButton, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => setShowExamNameDropdown(true)}
             >
-              <Text style={examName && examNames.includes(examName) ? styles.examNameSelectedText : styles.examNamePlaceholderText}>
+              <Text style={[
+                examName && examNames.includes(examName) ? styles.examNameSelectedText : styles.examNamePlaceholderText,
+                { color: colors.text }
+              ]}>
                 {examName && examNames.includes(examName) ? examName : 'Deneme Adları'}
               </Text>
               <Ionicons 
                 name="chevron-down" 
                 size={20} 
-                color="#6b7280" 
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
 
@@ -568,14 +575,14 @@ export default function AnalysisScreen() {
                 activeOpacity={1}
                 onPress={() => setShowExamNameDropdown(false)}
               >
-                <View style={styles.modalContent}>
+                <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
                   <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>Kaydedilen Deneme Adları</Text>
+                    <Text style={[styles.modalTitle, { color: colors.text }]}>Kaydedilen Deneme Adları</Text>
                     <TouchableOpacity
                       onPress={() => setShowExamNameDropdown(false)}
                       style={styles.modalCloseButton}
                     >
-                      <Ionicons name="close" size={24} color="#6b7280" />
+                      <Ionicons name="close" size={24} color={colors.textSecondary} />
                     </TouchableOpacity>
                   </View>
                   
@@ -614,14 +621,14 @@ export default function AnalysisScreen() {
 
         {/* Sonuç Girişi */}
         <View style={styles.inputSection}>
-          <Text style={styles.sectionTitle}>Sonuçlarını Gir</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Sonuçlarını Gir</Text>
           
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Toplam Soru Sayısı</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Toplam Soru Sayısı</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
               placeholder="Toplam soru sayısını giriniz"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textSecondary}
               value={totalQuestions}
               onChangeText={(text) => {
                 setTotalQuestions(text);
@@ -632,11 +639,11 @@ export default function AnalysisScreen() {
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Doğru Sayısı</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Doğru Sayısı</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
               placeholder="Doğru sayısını giriniz"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textSecondary}
               value={correctAnswers}
               onChangeText={(text) => {
                 setCorrectAnswers(text);
@@ -647,11 +654,11 @@ export default function AnalysisScreen() {
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Yanlış Sayısı</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Yanlış Sayısı</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
               placeholder="Yanlış sayısını giriniz"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textSecondary}
               value={wrongAnswers}
               onChangeText={(text) => {
                 setWrongAnswers(text);
@@ -675,7 +682,7 @@ export default function AnalysisScreen() {
         {/* Analiz Sonucu */}
         {isAnalyzed && (
           <View style={styles.resultSection}>
-            <Text style={styles.sectionTitle}>Analiz Sonucu</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Analiz Sonucu</Text>
             
             <View style={styles.scoreCard}>
               <Text style={styles.scoreLabel}>Başarı Oranı</Text>
@@ -736,7 +743,7 @@ export default function AnalysisScreen() {
         {/* Geçmiş Sonuçlar */}
         {savedResults.length > 0 && (
           <View style={styles.historySection}>
-            <Text style={styles.sectionTitle}>Geçmiş Sonuçlar</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Geçmiş Sonuçlar</Text>
             
             {/* Ders Filtresi */}
             <View style={styles.filterSection}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,38 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Switch,
+  Modal,
+  TextInput,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Picker } from '@react-native-picker/picker';
 
 
 export default function ProfileScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+  const [showAccountSettings, setShowAccountSettings] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { logout } = useAuth();
+  const { isDarkMode, toggleDarkMode, colors } = useTheme();
+  
+  // Profile data state
+  const [profileData, setProfileData] = useState({
+    firstName: 'Ahmet',
+    lastName: 'Yılmaz',
+    email: 'ahmet@example.com',
+    school: 'İstanbul Lisesi',
+    grade: '12',
+    branch: 'sayisal',
+  });
+  
+  const [displayName, setDisplayName] = useState('Ahmet Yılmaz');
+  const [displayEmail, setDisplayEmail] = useState('ahmet@example.com');
 
   const userStats = {
     totalStudyTime: '156 saat',
@@ -36,13 +58,47 @@ export default function ProfileScreen() {
 
   const menuItems = [
     { id: 1, title: 'Hesap Ayarları', icon: 'person-circle', color: '#3b82f6' },
-    { id: 2, title: 'Bildirimler', icon: 'notifications', color: '#f59e0b' },
-    { id: 3, title: 'Gizlilik', icon: 'shield-checkmark', color: '#10b981' },
-    { id: 4, title: 'Yardım & Destek', icon: 'help-circle', color: '#06b6d4' },
-    { id: 5, title: 'Hakkında', icon: 'information-circle', color: '#8b5cf6' },
-    { id: 6, title: 'Çıkış Yap', icon: 'log-out', color: '#ef4444' },
+    { id: 2, title: 'Gizlilik', icon: 'shield-checkmark', color: '#10b981' },
+    { id: 3, title: 'Yardım & Destek', icon: 'help-circle', color: '#06b6d4' },
+    { id: 4, title: 'Hakkında', icon: 'information-circle', color: '#8b5cf6' },
+    { id: 5, title: 'Çıkış Yap', icon: 'log-out', color: '#ef4444' },
   ];
 
+  // Load profile data on mount
+  useEffect(() => {
+    loadProfileData();
+  }, []);
+  
+  const loadProfileData = async () => {
+    try {
+      const data = await AsyncStorage.getItem('profileData');
+      if (data) {
+        const parsedData = JSON.parse(data);
+        setProfileData(parsedData);
+        setDisplayName(`${parsedData.firstName} ${parsedData.lastName}`);
+        setDisplayEmail(parsedData.email);
+      }
+    } catch (error) {
+      console.log('Veri yüklenemedi:', error);
+    }
+  };
+  
+  const saveProfileData = async () => {
+    try {
+      setIsLoading(true);
+      await AsyncStorage.setItem('profileData', JSON.stringify(profileData));
+      setDisplayName(`${profileData.firstName} ${profileData.lastName}`);
+      setDisplayEmail(profileData.email);
+      setShowAccountSettings(false);
+      Alert.alert('Başarılı', 'Profil bilgileriniz güncellendi!');
+    } catch (error) {
+      console.log('Veri kaydedilemedi:', error);
+      Alert.alert('Hata', 'Bilgiler kaydedilemedi!');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   const handleMenuPress = async (item: any) => {
     if (item.title === 'Çıkış Yap') {
       try {
@@ -50,13 +106,15 @@ export default function ProfileScreen() {
       } catch (error) {
         console.log('Çıkış yapılamadı:', error);
       }
+    } else if (item.title === 'Hesap Ayarları') {
+      setShowAccountSettings(true);
     } else {
       console.log(`${item.title} seçildi`);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
               <LinearGradient
                 colors={['#3b82f6', '#1e40af', '#7c3aed']}
                 start={{ x: 0, y: 0 }}
@@ -67,8 +125,8 @@ export default function ProfileScreen() {
           <View style={styles.avatarContainer}>
             <Ionicons name="person" size={40} color="white" />
           </View>
-          <Text style={styles.userName}>Ahmet Yılmaz</Text>
-          <Text style={styles.userEmail}>ahmet@example.com</Text>
+          <Text style={styles.userName}>{displayName}</Text>
+          <Text style={styles.userEmail}>{displayEmail}</Text>
           <View style={styles.levelBadge}>
             <Text style={styles.levelText}>{userStats.level}</Text>
           </View>
@@ -77,53 +135,53 @@ export default function ProfileScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.statsSection}>
-          <Text style={styles.sectionTitle}>İstatistikler</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>İstatistikler</Text>
           <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
+            <View style={[styles.statCard, { backgroundColor: colors.card }]}>
               <Ionicons name="time" size={24} color="#3b82f6" />
-              <Text style={styles.statNumber}>{userStats.totalStudyTime}</Text>
-              <Text style={styles.statLabel}>Toplam Çalışma</Text>
+              <Text style={[styles.statNumber, { color: colors.text }]}>{userStats.totalStudyTime}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Toplam Çalışma</Text>
             </View>
-            <View style={styles.statCard}>
+            <View style={[styles.statCard, { backgroundColor: colors.card }]}>
               <Ionicons name="help-circle" size={24} color="#10b981" />
-              <Text style={styles.statNumber}>{userStats.totalQuestions}</Text>
-              <Text style={styles.statLabel}>Toplam Soru</Text>
+              <Text style={[styles.statNumber, { color: colors.text }]}>{userStats.totalQuestions}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Toplam Soru</Text>
             </View>
-            <View style={styles.statCard}>
+            <View style={[styles.statCard, { backgroundColor: colors.card }]}>
               <Ionicons name="checkmark-circle" size={24} color="#f59e0b" />
-              <Text style={styles.statNumber}>{userStats.correctAnswers}</Text>
-              <Text style={styles.statLabel}>Doğru Cevap</Text>
+              <Text style={[styles.statNumber, { color: colors.text }]}>{userStats.correctAnswers}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Doğru Cevap</Text>
             </View>
-            <View style={styles.statCard}>
+            <View style={[styles.statCard, { backgroundColor: colors.card }]}>
               <Ionicons name="trending-up" size={24} color="#8b5cf6" />
-              <Text style={styles.statNumber}>{userStats.accuracy}</Text>
-              <Text style={styles.statLabel}>Doğruluk Oranı</Text>
+              <Text style={[styles.statNumber, { color: colors.text }]}>{userStats.accuracy}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Doğruluk Oranı</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.achievementsSection}>
-          <Text style={styles.sectionTitle}>Başarılar</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Başarılar</Text>
           <View style={styles.achievementsGrid}>
             {achievements.map((achievement) => (
-              <View key={achievement.id} style={styles.achievementCard}>
+              <View key={achievement.id} style={[styles.achievementCard, { backgroundColor: colors.card }]}>
                 <View style={[styles.achievementIcon, { backgroundColor: achievement.color }]}>
                   <Ionicons name={achievement.icon as any} size={24} color="white" />
                 </View>
-                <Text style={styles.achievementTitle}>{achievement.title}</Text>
-                <Text style={styles.achievementDescription}>{achievement.description}</Text>
+                <Text style={[styles.achievementTitle, { color: colors.text }]}>{achievement.title}</Text>
+                <Text style={[styles.achievementDescription, { color: colors.textSecondary }]}>{achievement.description}</Text>
               </View>
             ))}
           </View>
         </View>
 
         <View style={styles.settingsSection}>
-          <Text style={styles.sectionTitle}>Ayarlar</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Ayarlar</Text>
           
-          <View style={styles.settingItem}>
+          <View style={[styles.settingItem, { backgroundColor: colors.card }]}>
             <View style={styles.settingLeft}>
               <Ionicons name="notifications" size={24} color="#f59e0b" />
-              <Text style={styles.settingTitle}>Bildirimler</Text>
+              <Text style={[styles.settingTitle, { color: colors.text }]}>Bildirimler</Text>
             </View>
             <Switch
               value={notificationsEnabled}
@@ -133,33 +191,33 @@ export default function ProfileScreen() {
             />
           </View>
 
-          <View style={styles.settingItem}>
+          <View style={[styles.settingItem, { backgroundColor: colors.card }]}>
             <View style={styles.settingLeft}>
               <Ionicons name="moon" size={24} color="#8b5cf6" />
-              <Text style={styles.settingTitle}>Karanlık Mod</Text>
+              <Text style={[styles.settingTitle, { color: colors.text }]}>Karanlık Mod</Text>
             </View>
             <Switch
-              value={darkModeEnabled}
-              onValueChange={setDarkModeEnabled}
+              value={isDarkMode}
+              onValueChange={toggleDarkMode}
               trackColor={{ false: '#e5e7eb', true: '#3b82f6' }}
-              thumbColor={darkModeEnabled ? '#ffffff' : '#f3f4f6'}
+              thumbColor={isDarkMode ? '#ffffff' : '#f3f4f6'}
             />
           </View>
         </View>
 
         <View style={styles.menuSection}>
-          <Text style={styles.sectionTitle}>Menü</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Menü</Text>
           {menuItems.map((item) => (
             <TouchableOpacity
               key={item.id}
-              style={styles.menuItem}
+              style={[styles.menuItem, { backgroundColor: colors.card }]}
               onPress={() => handleMenuPress(item)}
             >
               <View style={styles.menuLeft}>
                 <View style={[styles.menuIcon, { backgroundColor: item.color }]}>
                   <Ionicons name={item.icon as any} size={20} color="white" />
                 </View>
-                <Text style={styles.menuTitle}>{item.title}</Text>
+                <Text style={[styles.menuTitle, { color: colors.text }]}>{item.title}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
             </TouchableOpacity>
@@ -167,12 +225,146 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.appInfo}>
-          <Text style={styles.appVersion}>Pusula v1.0.0</Text>
-          <Text style={styles.appDescription}>
+          <Text style={[styles.appVersion, { color: colors.text }]}>Pusula v1.0.0</Text>
+          <Text style={[styles.appDescription, { color: colors.textSecondary }]}>
             Kişisel öğrenme yolculuğunda yanındayız
           </Text>
         </View>
       </ScrollView>
+      
+      {/* Account Settings Modal */}
+      <Modal
+        visible={showAccountSettings}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowAccountSettings(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderLeft}>
+                <View style={styles.modalIconContainer}>
+                  <Ionicons name="person-circle" size={24} color="white" />
+                </View>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>Hesap Ayarları</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowAccountSettings(false)}
+                style={styles.closeButton}
+              >
+                <Ionicons name="close" size={28} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+              <View style={[styles.inputContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                <View style={styles.inputIcon}>
+                  <Ionicons name="person" size={20} color="#3b82f6" />
+                </View>
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="Ad"
+                  value={profileData.firstName}
+                  onChangeText={(text) => setProfileData({ ...profileData, firstName: text })}
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
+              
+              <View style={[styles.inputContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                <View style={styles.inputIcon}>
+                  <Ionicons name="person" size={20} color="#3b82f6" />
+                </View>
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="Soyad"
+                  value={profileData.lastName}
+                  onChangeText={(text) => setProfileData({ ...profileData, lastName: text })}
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
+              
+              <View style={[styles.inputContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                <View style={styles.inputIcon}>
+                  <Ionicons name="mail" size={20} color="#3b82f6" />
+                </View>
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="E-posta"
+                  value={profileData.email}
+                  onChangeText={(text) => setProfileData({ ...profileData, email: text })}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
+              
+              <View style={[styles.inputContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                <View style={styles.inputIcon}>
+                  <Ionicons name="school" size={20} color="#3b82f6" />
+                </View>
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder="Okul"
+                  value={profileData.school}
+                  onChangeText={(text) => setProfileData({ ...profileData, school: text })}
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
+              
+              <View style={[styles.inputContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                <View style={styles.inputIcon}>
+                  <Ionicons name="school" size={20} color="#3b82f6" />
+                </View>
+                <View style={[styles.pickerContainer, { backgroundColor: colors.surface }]}>
+                  <Picker
+                    selectedValue={profileData.grade}
+                    style={[styles.picker, { color: colors.text }]}
+                    onValueChange={(itemValue) => setProfileData({ ...profileData, grade: itemValue })}
+                  >
+                    <Picker.Item label="9. Sınıf" value="9" />
+                    <Picker.Item label="10. Sınıf" value="10" />
+                    <Picker.Item label="11. Sınıf" value="11" />
+                    <Picker.Item label="12. Sınıf" value="12" />
+                    <Picker.Item label="Mezun" value="mezun" />
+                  </Picker>
+                </View>
+              </View>
+              
+              <View style={[styles.inputContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                <View style={styles.inputIcon}>
+                  <Ionicons name="book" size={20} color="#3b82f6" />
+                </View>
+                <View style={[styles.pickerContainer, { backgroundColor: colors.surface }]}>
+                  <Picker
+                    selectedValue={profileData.branch}
+                    style={[styles.picker, { color: colors.text }]}
+                    onValueChange={(itemValue) => setProfileData({ ...profileData, branch: itemValue })}
+                  >
+                    <Picker.Item label="Sayısal" value="sayisal" />
+                    <Picker.Item label="Sözel" value="sozel" />
+                    <Picker.Item label="Eşit Ağırlık" value="esit-agirlik" />
+                  </Picker>
+                </View>
+              </View>
+              
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={saveProfileData}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <>
+                    <Ionicons name="save" size={20} color="white" />
+                    <Text style={styles.saveButtonText}>Kaydet</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -395,5 +587,93 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7280',
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    paddingBottom: 40,
+    maxHeight: '90%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  modalHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  modalIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#3b82f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  closeButton: {
+    padding: 5,
+  },
+  modalBody: {
+    padding: 20,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  inputIcon: {
+    paddingHorizontal: 15,
+  },
+  input: {
+    flex: 1,
+    height: 50,
+    paddingHorizontal: 15,
+    fontSize: 16,
+    color: '#1f2937',
+  },
+  pickerContainer: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 50,
+    color: '#1f2937',
+  },
+  saveButton: {
+    backgroundColor: '#3b82f6',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    borderRadius: 12,
+    marginTop: 20,
+    gap: 8,
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });
