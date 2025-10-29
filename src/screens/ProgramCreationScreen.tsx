@@ -14,28 +14,29 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ProgramSettings {
   dailyTimeRange: string;
   lessonDuration: number;
   breakDuration: number;
-  dayCount: number;
 }
 
 export default function ProgramCreationScreen() {
+  const { colors, isDarkMode } = useTheme();
   const navigation = useNavigation<any>();
   
   const [programSettings, setProgramSettings] = useState<ProgramSettings>({
     dailyTimeRange: '08:00 - 18:00',
     lessonDuration: 45,
     breakDuration: 15,
-    dayCount: 5,
   });
 
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [programTable, setProgramTable] = useState<any[]>([]);
   const [selectedDay, setSelectedDay] = useState('Tüm Günler');
-  const [selectedWeek, setSelectedWeek] = useState(0); // Hafta seçimi için
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]); // Seçilen tarihler
+  const [currentMonth, setCurrentMonth] = useState(new Date()); // Takvim ayı
   const [savedPrograms, setSavedPrograms] = useState<{[key: string]: any[]}>({}); // Kaydedilen programlar
 
   // Gün renkleri
@@ -54,43 +55,146 @@ export default function ProgramCreationScreen() {
     return dayColors[dayName as keyof typeof dayColors] || '#4ECDC4';
   };
 
-  // Hafta seçimi için fonksiyonlar
-  const getWeekDates = (weekOffset: number) => {
-    const today = new Date();
-    const currentDay = today.getDay(); // 0 = Pazar, 1 = Pazartesi
-    const daysToMonday = currentDay === 0 ? -6 : 1 - currentDay; // Pazartesi'ye kadar olan gün sayısı
-    
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + daysToMonday + (weekOffset * 7));
-    
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    
-    return { monday, sunday };
+  // Takvim için fonksiyonlar
+  const getDayName = (date: Date): string => {
+    const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+    return days[date.getDay()];
   };
 
-  const formatWeekRange = (weekOffset: number) => {
-    const { monday, sunday } = getWeekDates(weekOffset);
-    const formatDate = (date: Date) => {
-      return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' });
-    };
-    
-    if (weekOffset === 0) return 'Bu Hafta';
-    if (weekOffset === 1) return 'Gelecek Hafta';
-    if (weekOffset === -1) return 'Geçen Hafta';
-    
-    return `${formatDate(monday)} - ${formatDate(sunday)}`;
+  const formatDateKey = (date: Date): string => {
+    return date.toISOString().split('T')[0];
   };
 
-  const generateWeekOptions = () => {
-    const options = [];
-    for (let i = -2; i <= 4; i++) {
-      options.push({
-        label: formatWeekRange(i),
-        value: i
-      });
+  const isDateSelected = (date: Date): boolean => {
+    return selectedDates.some(d => formatDateKey(d) === formatDateKey(date));
+  };
+
+  const toggleDateSelection = (date: Date) => {
+    const dateKey = formatDateKey(date);
+    const isSelected = selectedDates.some(d => formatDateKey(d) === dateKey);
+    
+    if (isSelected) {
+      // Seçimi kaldır - eğer bu bir aralığın parçasıysa, aralığı da kaldır
+      const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+      const index = sortedDates.findIndex(d => formatDateKey(d) === dateKey);
+      
+      // Seçilen günü kaldır
+      setSelectedDates(selectedDates.filter(d => formatDateKey(d) !== dateKey));
+    } else {
+      // Maksimum 7 gün kontrolü
+      if (selectedDates.length >= 7) {
+        Alert.alert('Uyarı', 'Maksimum 7 gün seçebilirsiniz!');
+        return;
+      }
+      
+      // Eğer hiç gün seçili değilse, direkt ekle
+      if (selectedDates.length === 0) {
+        setSelectedDates([date]);
+        return;
+      }
+      
+      // Seçili tarihleri sırala
+      const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+      const firstDate = sortedDates[0];
+      const lastDate = sortedDates[sortedDates.length - 1];
+      
+      // Yeni tarih ilk tarihten önceyse
+      if (date.getTime() < firstDate.getTime()) {
+        const startDate = date;
+        const endDate = lastDate;
+        const daysBetween = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // Maksimum 7 gün kontrolü (yeni başlangıç + mevcut günler)
+        if (daysBetween + 1 > 7) {
+          Alert.alert('Uyarı', 'Maksimum 7 gün seçebilirsiniz!');
+          return;
+        }
+        
+        // Aradaki tüm günleri ekle
+        const newDates: Date[] = [];
+        for (let i = 0; i <= daysBetween; i++) {
+          const currentDate = new Date(startDate);
+          currentDate.setDate(startDate.getDate() + i);
+          newDates.push(currentDate);
+        }
+        
+        setSelectedDates(newDates);
+      }
+      // Yeni tarih son tarihten sonraysa
+      else if (date.getTime() > lastDate.getTime()) {
+        const startDate = firstDate;
+        const endDate = date;
+        const daysBetween = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // Maksimum 7 gün kontrolü
+        if (daysBetween + 1 > 7) {
+          Alert.alert('Uyarı', 'Maksimum 7 gün seçebilirsiniz!');
+          return;
+        }
+        
+        // Aradaki tüm günleri ekle
+        const newDates: Date[] = [];
+        for (let i = 0; i <= daysBetween; i++) {
+          const currentDate = new Date(startDate);
+          currentDate.setDate(startDate.getDate() + i);
+          newDates.push(currentDate);
+        }
+        
+        setSelectedDates(newDates);
+      }
+      // Yeni tarih aralık içindeyse (bu durumda ekleme yapmıyoruz ama yine de ekleyelim)
+      else {
+        // Aralık içinde bir yere tıklandıysa, sadece o günü ekle (aralık oluşturma)
+        // Ama önce mevcut aralığı kontrol et
+        const currentRange = Math.ceil((lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        if (currentRange >= 7) {
+          Alert.alert('Uyarı', 'Maksimum 7 gün seçebilirsiniz!');
+          return;
+        }
+        
+        setSelectedDates([...selectedDates, date].sort((a, b) => a.getTime() - b.getTime()));
+      }
     }
-    return options;
+  };
+
+  // Takvim günlerini oluştur
+  const getCalendarDays = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Pazartesi = 0
+    
+    const days = [];
+    
+    // Önceki ayın son günleri
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+      const date = new Date(year, month - 1, prevMonthLastDay - i);
+      days.push({ date, isCurrentMonth: false });
+    }
+    
+    // Bu ayın günleri
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      days.push({ date, isCurrentMonth: true });
+    }
+    
+    // Sonraki ayın ilk günleri (takvimi tamamlamak için)
+    const remainingDays = 42 - days.length; // 6 hafta x 7 gün = 42
+    for (let day = 1; day <= remainingDays; day++) {
+      const date = new Date(year, month + 1, day);
+      days.push({ date, isCurrentMonth: false });
+    }
+    
+    return days;
+  };
+
+  const changeMonth = (direction: number) => {
+    const newMonth = new Date(currentMonth);
+    newMonth.setMonth(currentMonth.getMonth() + direction);
+    setCurrentMonth(newMonth);
   };
 
   // Kaydedilen programları yükle
@@ -108,46 +212,23 @@ export default function ProgramCreationScreen() {
   // Programı kaydet
   const saveProgram = async () => {
     try {
-      const weekKey = selectedWeek.toString();
-      const newSavedPrograms = {
-        ...savedPrograms,
-        [weekKey]: programTable
-      };
+      // Seçilen tarihler için programı kaydet
+      selectedDates.forEach(date => {
+        const dateKey = formatDateKey(date);
+        const dayProgram = programTable.find(p => p.dateKey === dateKey);
+        if (dayProgram) {
+          savedPrograms[dateKey] = [dayProgram];
+        }
+      });
       
-      await AsyncStorage.setItem('savedPrograms', JSON.stringify(newSavedPrograms));
-      setSavedPrograms(newSavedPrograms);
+      await AsyncStorage.setItem('savedPrograms', JSON.stringify(savedPrograms));
       
       // Ödevleri de kaydet
-      await saveAssignmentsToWeek();
+      await saveAssignmentsToDates();
       
+      Alert.alert('Başarılı', 'Program kaydedildi!');
     } catch (error) {
       Alert.alert('Hata', 'Program kaydedilirken bir hata oluştu!');
-    }
-  };
-
-  // Hafta değiştiğinde programı yükle
-  const handleWeekChange = (weekIndex: number) => {
-    setSelectedWeek(weekIndex);
-    const weekKey = weekIndex.toString();
-    
-    if (savedPrograms[weekKey]) {
-      setProgramTable(savedPrograms[weekKey]);
-    } else {
-      setProgramTable([]);
-    }
-    
-    // Sadece "Bu Hafta" (weekIndex === 0) seçildiğinde ve ayarlar modalı açıksa otomatik program oluştur
-    if (showSettingsModal && weekIndex === 0 && !savedPrograms[weekKey]) {
-      setShowSettingsModal(false);
-      // Kısa bir gecikme ile program oluştur
-      setTimeout(() => {
-        generateProgramTable();
-        Alert.alert(
-          'Program Oluşturuldu', 
-          'Bu hafta için program tablosu oluşturuldu!',
-          [{ text: 'Tamam' }]
-        );
-      }, 300);
     }
   };
 
@@ -158,11 +239,16 @@ export default function ProgramCreationScreen() {
 
   // Program tablosu oluşturma fonksiyonu
   const generateProgramTable = () => {
-    const { dailyTimeRange, lessonDuration, breakDuration, dayCount } = programSettings;
+    const { dailyTimeRange, lessonDuration, breakDuration } = programSettings;
     
     // Hata kontrolü
-    if (lessonDuration <= 0 || breakDuration < 0 || dayCount <= 0) {
+    if (lessonDuration <= 0 || breakDuration < 0) {
       Alert.alert('Hata', 'Lütfen geçerli değerler girin!');
+      return;
+    }
+
+    if (selectedDates.length === 0) {
+      Alert.alert('Uyarı', 'Lütfen en az bir gün seçin!');
       return;
     }
     
@@ -188,12 +274,15 @@ export default function ProgramCreationScreen() {
         return;
       }
       
-      const days = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-      const table = [];
+      const table: any[] = [];
       
-      for (let day = 0; day < dayCount; day++) {
+      // Seçilen tarihleri sırala
+      const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+      
+      sortedDates.forEach((date) => {
         const daySlots = [];
         let currentMinutes = startMinutes;
+        const dayName = getDayName(date);
         
         for (let slot = 0; slot < slotsPerDay; slot++) {
           const slotStartHour = Math.floor(currentMinutes / 60);
@@ -205,7 +294,7 @@ export default function ProgramCreationScreen() {
           const timeString = `${slotStartHour.toString().padStart(2, '0')}:${slotStartMinute.toString().padStart(2, '0')} - ${slotEndHour.toString().padStart(2, '0')}:${slotEndMinute.toString().padStart(2, '0')}`;
           
           daySlots.push({
-            id: `${day}-${slot}`,
+            id: `${formatDateKey(date)}-${slot}`,
             time: timeString,
             subject: '',
             createdAt: new Date().toISOString(),
@@ -215,13 +304,17 @@ export default function ProgramCreationScreen() {
         }
         
         table.push({
-          day: days[day],
+          date: date,
+          dateKey: formatDateKey(date),
+          day: dayName,
+          dateFormatted: date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }),
           slots: daySlots,
         });
-      }
+      });
       
       setProgramTable(table);
-      Alert.alert('Başarılı', `Program tablosu oluşturuldu!\n${dayCount} gün, günde ${slotsPerDay} slot`);
+      Alert.alert('Başarılı', `Program tablosu oluşturuldu!\n${selectedDates.length} gün, günde ${slotsPerDay} slot`);
+      setShowSettingsModal(false);
     } catch (error) {
       Alert.alert('Hata', 'Saat formatı hatalı! (Örnek: 08:00 - 18:00)');
     }
@@ -234,56 +327,33 @@ export default function ProgramCreationScreen() {
   };
 
 
-  // Ödevleri hafta seçimine göre kaydet
-  const saveAssignmentsToWeek = async () => {
+  // Ödevleri seçilen tarihlere göre kaydet
+  const saveAssignmentsToDates = async () => {
     try {
       console.log('Ödev kaydetme başladı');
-      const assignments = [];
+      const assignments: any[] = [];
       const dayCounts: {[key: string]: number} = {};
       
       programTable.forEach(day => {
-        dayCounts[day.day] = 0;
-        day.slots.forEach(slot => {
+        if (!day.date) return;
+        
+        const dateKey = formatDateKey(day.date);
+        dayCounts[dateKey] = 0;
+        
+        day.slots.forEach((slot: any) => {
           if (slot.subject && slot.subject.trim() !== '') {
-            // Gün adını Türkçe'den İngilizce'ye çevir
-            const dayMapping: {[key: string]: string} = {
-              'Pazartesi': 'Monday',
-              'Salı': 'Tuesday', 
-              'Çarşamba': 'Wednesday',
-              'Perşembe': 'Thursday',
-              'Cuma': 'Friday',
-              'Cumartesi': 'Saturday',
-              'Pazar': 'Sunday'
-            };
-            
-            // Seçilen haftanın tarihini hesapla
-            const weekDates = getWeekDates(selectedWeek);
-            const dayOfWeek = dayMapping[day.day];
-            const dayOffset: {[key: string]: number} = {
-              'Monday': 0,
-              'Tuesday': 1,
-              'Wednesday': 2,
-              'Thursday': 3,
-              'Friday': 4,
-              'Saturday': 5,
-              'Sunday': 6
-            };
-            
-            const assignmentDate = new Date(weekDates.monday);
-            assignmentDate.setDate(weekDates.monday.getDate() + dayOffset[dayOfWeek]);
-            
             assignments.push({
-              id: `${day.day}-${slot.time}-${Date.now()}`,
+              id: `${dateKey}-${slot.time}-${Date.now()}`,
               title: slot.subject,
               subject: 'Program Ödevi',
-              dueDate: assignmentDate.toISOString().split('T')[0],
+              dueDate: formatDateKey(day.date),
               priority: 'Orta',
-              description: `${day.day} günü ${slot.time} saatinde`,
+              description: `${day.dateFormatted} ${slot.time} saatinde`,
               createdAt: new Date().toISOString(),
               isFromProgram: true,
             });
             
-            dayCounts[day.day]++;
+            dayCounts[dateKey]++;
           }
         });
       });
@@ -293,13 +363,11 @@ export default function ProgramCreationScreen() {
         const existingAssignments = await AsyncStorage.getItem('assignments');
         const allAssignments = existingAssignments ? JSON.parse(existingAssignments) : [];
         
-        // Bu haftanın program ödevlerini kaldır
-        const weekDates = getWeekDates(selectedWeek);
+        // Seçilen tarihlerin program ödevlerini kaldır
+        const selectedDateKeys = selectedDates.map(d => formatDateKey(d));
         const filteredAssignments = allAssignments.filter((assignment: any) => {
           if (!assignment.isFromProgram) return true;
-          
-          const assignmentDate = new Date(assignment.dueDate);
-          return !(assignmentDate >= weekDates.monday && assignmentDate <= weekDates.sunday);
+          return !selectedDateKeys.includes(assignment.dueDate);
         });
         
         // Yeni ödevleri ekle
@@ -310,12 +378,7 @@ export default function ProgramCreationScreen() {
         console.log('Ödevler kaydedildi, toplam:', updatedAssignments.length);
         
         // Mesaj oluştur
-        let message = `${assignments.length} ödev güncellendi!\n\n`;
-        Object.keys(dayCounts).forEach(day => {
-          if (dayCounts[day] > 0) {
-            message += `• ${day}: ${dayCounts[day]} ödev\n`;
-          }
-        });
+        let message = `${assignments.length} ödev güncellendi!`;
         
         Alert.alert('Başarılı', message);
       } else {
@@ -323,32 +386,9 @@ export default function ProgramCreationScreen() {
       }
     } catch (error) {
       console.error('Ödev kaydetme hatası:', error);
-      Alert.alert('Hata', `Ödevler kaydedilirken bir hata oluştu: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu';
+      Alert.alert('Hata', `Ödevler kaydedilirken bir hata oluştu: ${errorMessage}`);
     }
-  };
-
-  // Bir sonraki haftanın belirli gününün tarihini al
-  const getNextWeekDate = (dayName: string) => {
-    const today = new Date();
-    const currentDay = today.getDay(); // 0=Pazar, 1=Pazartesi, ..., 6=Cumartesi
-    
-    const dayMapping = {
-      'Monday': 1,
-      'Tuesday': 2,
-      'Wednesday': 3,
-      'Thursday': 4,
-      'Friday': 5,
-      'Saturday': 6,
-      'Sunday': 0
-    };
-    
-    const targetDay = dayMapping[dayName as keyof typeof dayMapping];
-    const daysUntilTarget = (targetDay - currentDay + 7) % 7;
-    
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + daysUntilTarget);
-    
-    return targetDate.toISOString().split('T')[0]; // YYYY-MM-DD format
   };
 
   // Gün seçimi için fonksiyon
@@ -369,7 +409,7 @@ export default function ProgramCreationScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <LinearGradient
@@ -388,7 +428,9 @@ export default function ProgramCreationScreen() {
             <View style={styles.headerTextContainer}>
               <Text style={styles.headerTitle}>Program Oluştur</Text>
               <Text style={styles.headerSubtitle}>
-                {formatWeekRange(selectedWeek)}
+                {selectedDates.length > 0 
+                  ? `${selectedDates.length} gün seçildi`
+                  : 'Tarih seçin'}
               </Text>
             </View>
             <View style={styles.headerButtons}>
@@ -413,8 +455,8 @@ export default function ProgramCreationScreen() {
           {programTable.length > 0 ? (
             <View style={styles.tableContainer}>
               {/* Gün Seçimi */}
-              <View style={styles.daySelectorContainer}>
-                <Text style={styles.daySelectorLabel}>Gün Seçimi</Text>
+              <View style={[styles.daySelectorContainer, { backgroundColor: colors.card }]}>
+                <Text style={[styles.daySelectorLabel, { color: colors.text }]}>Gün Seçimi</Text>
                 <ScrollView 
                   horizontal 
                   showsHorizontalScrollIndicator={false}
@@ -427,13 +469,13 @@ export default function ProgramCreationScreen() {
                         key={index}
                         style={[
                           styles.dayOption,
-                          selectedDay === day && { backgroundColor: dayColor, borderColor: dayColor }
+                          { backgroundColor: selectedDay === day ? dayColor : colors.surface, borderColor: selectedDay === day ? dayColor : colors.border }
                         ]}
                         onPress={() => setSelectedDay(day)}
                       >
                         <Text style={[
                           styles.dayOptionText,
-                          selectedDay === day && { color: 'white' }
+                          { color: selectedDay === day ? 'white' : colors.textSecondary }
                         ]}>
                           {day}
                         </Text>
@@ -444,32 +486,37 @@ export default function ProgramCreationScreen() {
               </View>
               {getFilteredTable().map((day, dayIndex) => {
                 // Orijinal indeksi bul
-                const originalIndex = programTable.findIndex(d => d.day === day.day);
+                const originalIndex = programTable.findIndex(d => d.dateKey === day.dateKey);
                 const dayColor = getDayColor(day.day);
                 return (
-                <View key={dayIndex} style={styles.dayCard}>
-                  <View style={styles.dayHeader}>
-                    <Text style={styles.dayTitle}>{day.day}</Text>
+                <View key={dayIndex} style={[styles.dayCard, { backgroundColor: colors.card }]}>
+                  <View style={[styles.dayHeader, { borderBottomColor: colors.border }]}>
+                    <View>
+                      <Text style={[styles.dayTitle, { color: colors.text }]}>{day.day}</Text>
+                      {day.dateFormatted && (
+                        <Text style={[styles.dayDate, { color: colors.textSecondary }]}>{day.dateFormatted}</Text>
+                      )}
+                    </View>
                     <View style={[styles.dayStats, { backgroundColor: `${dayColor}20` }]}>
                       <Text style={[styles.dayStatsText, { color: dayColor }]}>
-                        {day.slots.filter(slot => slot.isCompleted).length} / {day.slots.length}
+                        {day.slots.filter((slot: any) => slot.isCompleted).length} / {day.slots.length}
                       </Text>
                     </View>
                   </View>
                   
                   <View style={styles.slotsContainer}>
-                    {day.slots.map((slot, slotIndex) => (
-                      <View key={slot.id} style={styles.slotCard}>
+                    {day.slots.map((slot: any, slotIndex: number) => (
+                      <View key={slot.id} style={[styles.slotCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                         <View style={styles.slotHeader}>
                           <Text style={[styles.slotTime, { color: dayColor }]}>{slot.time}</Text>
                         </View>
                         
                         <TextInput
-                          style={styles.subjectInput}
+                          style={[styles.subjectInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
                           placeholder="Ders/Etkinlik adı..."
-                          placeholderTextColor="#9CA3AF"
+                          placeholderTextColor={colors.textSecondary}
                           value={slot.subject}
-                          onChangeText={(text) => updateSubject(originalIndex, slotIndex, text)}
+                          onChangeText={(text: string) => updateSubject(originalIndex, slotIndex, text)}
                           multiline={true}
                           numberOfLines={2}
                           textAlignVertical="top"
@@ -483,9 +530,9 @@ export default function ProgramCreationScreen() {
             </View>
           ) : (
             <View style={styles.emptyState}>
-              <Ionicons name="calendar-outline" size={64} color="#D1D5DB" />
-              <Text style={styles.emptyTitle}>Program Tablosu</Text>
-              <Text style={styles.emptySubtitle}>
+              <Ionicons name="calendar-outline" size={64} color={colors.textSecondary} />
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>Program Tablosu</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                 Program ayarlarınızı yapın ve tabloyu oluşturun
               </Text>
               <TouchableOpacity 
@@ -513,60 +560,168 @@ export default function ProgramCreationScreen() {
         onRequestClose={() => setShowSettingsModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Program Ayarları</Text>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Program Ayarları</Text>
               <TouchableOpacity onPress={() => setShowSettingsModal(false)}>
-                <Ionicons name="close" size={24} color="#6b7280" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Hafta Seçimi */}
+              {/* Takvim - Gün Seçimi */}
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Hafta Seçimi</Text>
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.weekOptionsScroll}
-                >
-                  {generateWeekOptions().map((option, index) => (
+                <Text style={[styles.inputLabel, { color: colors.text }]}>Tarih Seçimi</Text>
+                
+                {/* Takvim Başlığı */}
+                <View style={styles.calendarHeader}>
+                  <TouchableOpacity 
+                    onPress={() => changeMonth(-1)}
+                    style={styles.calendarNavButton}
+                  >
+                    <Ionicons name="chevron-back" size={20} color={colors.text} />
+                  </TouchableOpacity>
+                  
+                  <Text style={[styles.calendarMonthText, { color: colors.text }]}>
+                    {currentMonth.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}
+                  </Text>
+                  
+                  <TouchableOpacity 
+                    onPress={() => changeMonth(1)}
+                    style={styles.calendarNavButton}
+                  >
+                    <Ionicons name="chevron-forward" size={20} color={colors.text} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Takvim Günleri */}
+                <View style={[styles.calendarContainer, { backgroundColor: colors.surface }]}>
+                  {/* Hafta Günleri Başlıkları */}
+                  <View style={styles.calendarWeekHeader}>
+                    {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map((day, index) => (
+                      <View key={index} style={styles.calendarWeekDayHeader}>
+                        <Text style={[styles.calendarWeekDayText, { color: colors.textSecondary }]}>
+                          {day}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  {/* Takvim Günleri */}
+                  <View style={styles.calendarDaysContainer}>
+                    {getCalendarDays().map((item, index) => {
+                      const isSelected = isDateSelected(item.date);
+                      const isToday = formatDateKey(item.date) === formatDateKey(new Date());
+                      
+                      return (
                     <TouchableOpacity
                       key={index}
                       style={[
-                        styles.weekOption,
-                        selectedWeek === option.value && styles.selectedWeekOption
-                      ]}
-                      onPress={() => handleWeekChange(option.value)}
+                            styles.calendarDay,
+                            !item.isCurrentMonth && { opacity: 0.3 },
+                            isToday && styles.calendarDayToday,
+                            isSelected && [styles.calendarDaySelected, { backgroundColor: '#4ECDC4' }]
+                          ]}
+                          onPress={() => toggleDateSelection(item.date)}
                     >
                       <Text style={[
-                        styles.weekOptionText,
-                        selectedWeek === option.value && styles.selectedWeekOptionText
-                      ]}>
-                        {option.label}
+                            styles.calendarDayText,
+                            { color: item.isCurrentMonth ? colors.text : colors.textSecondary },
+                            isSelected && { color: 'white', fontWeight: 'bold' },
+                            isToday && !isSelected && { color: '#4ECDC4', fontWeight: 'bold' }
+                          ]}>
+                            {item.date.getDate()}
                       </Text>
                     </TouchableOpacity>
-                  ))}
-                </ScrollView>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                {/* Seçilen Tarihler */}
+                {selectedDates.length > 0 && (
+                  <View style={styles.selectedDatesContainer}>
+                    <Text style={[styles.selectedDatesLabel, { color: colors.textSecondary }]}>
+                      Seçilen Günler ({selectedDates.length}/7):
+                    </Text>
+                    <View style={styles.selectedDatesList}>
+                      {(() => {
+                        const sorted = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+                        if (sorted.length === 1) {
+                          return (
+                            <TouchableOpacity
+                              style={[styles.selectedDateChip, { backgroundColor: colors.card, borderColor: colors.border }]}
+                              onPress={() => toggleDateSelection(sorted[0])}
+                            >
+                              <Text style={[styles.selectedDateText, { color: colors.text }]}>
+                                {sorted[0].toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                              </Text>
+                              <Ionicons name="close-circle" size={16} color={colors.textSecondary} />
+                            </TouchableOpacity>
+                          );
+                        } else if (sorted.length > 1) {
+                          const first = sorted[0];
+                          const last = sorted[sorted.length - 1];
+                          const isRange = sorted.length === Math.ceil((last.getTime() - first.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                          
+                          if (isRange) {
+                            // Aralık göster
+                            return (
+                              <TouchableOpacity
+                                style={[styles.selectedDateChip, { backgroundColor: colors.card, borderColor: colors.border }]}
+                                onPress={() => {
+                                  // Aralığın tamamını kaldır
+                                  setSelectedDates([]);
+                                }}
+                              >
+                                <Text style={[styles.selectedDateText, { color: colors.text }]}>
+                                  {first.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} - {last.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                                </Text>
+                                <Ionicons name="close-circle" size={16} color={colors.textSecondary} />
+                              </TouchableOpacity>
+                            );
+                          } else {
+                            // Aralık değilse, tüm günleri göster
+                            return sorted.map((date, index) => (
+                              <TouchableOpacity
+                                key={index}
+                                style={[styles.selectedDateChip, { backgroundColor: colors.card, borderColor: colors.border }]}
+                                onPress={() => toggleDateSelection(date)}
+                              >
+                                <Text style={[styles.selectedDateText, { color: colors.text }]}>
+                                  {date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                                </Text>
+                                <Ionicons name="close-circle" size={16} color={colors.textSecondary} />
+                              </TouchableOpacity>
+                            ));
+                          }
+                        }
+                        return null;
+                      })()}
+                    </View>
+                  </View>
+                )}
               </View>
 
               {/* Günlük Saat Aralığı */}
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Günlük Saat Aralığı</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>Günlük Saat Aralığı</Text>
                 <View style={styles.timeRangeContainer}>
                   <TextInput
-                    style={styles.timeInput}
+                    style={[styles.timeInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                     placeholder="08:00"
+                    placeholderTextColor={colors.textSecondary}
                     value={programSettings.dailyTimeRange.split(' - ')[0]}
                     onChangeText={(text) => setProgramSettings({
                       ...programSettings,
                       dailyTimeRange: `${text} - ${programSettings.dailyTimeRange.split(' - ')[1]}`
                     })}
                   />
-                  <Text style={styles.timeSeparator}>-</Text>
+                  <Text style={[styles.timeSeparator, { color: colors.textSecondary }]}>-</Text>
                   <TextInput
-                    style={styles.timeInput}
+                    style={[styles.timeInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                     placeholder="18:00"
+                    placeholderTextColor={colors.textSecondary}
                     value={programSettings.dailyTimeRange.split(' - ')[1]}
                     onChangeText={(text) => setProgramSettings({
                       ...programSettings,
@@ -578,11 +733,11 @@ export default function ProgramCreationScreen() {
 
               {/* Ders Süresi */}
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Ders Süresi (dakika)</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>Ders Süresi (dakika)</Text>
                 <TextInput
-                  style={styles.numberInput}
+                  style={[styles.numberInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                   placeholder="45"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.textSecondary}
                   value={programSettings.lessonDuration.toString()}
                   onChangeText={(text) => {
                     const value = parseInt(text) || 45;
@@ -597,11 +752,11 @@ export default function ProgramCreationScreen() {
 
               {/* Tenefüs Süresi */}
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Tenefüs Süresi (dakika)</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>Tenefüs Süresi (dakika)</Text>
                 <TextInput
-                  style={styles.numberInput}
+                  style={[styles.numberInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                   placeholder="15"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.textSecondary}
                   value={programSettings.breakDuration.toString()}
                   onChangeText={(text) => {
                     const value = parseInt(text) || 15;
@@ -614,28 +769,10 @@ export default function ProgramCreationScreen() {
                 />
               </View>
 
-              {/* Gün Sayısı */}
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Gün Sayısı</Text>
-                <TextInput
-                  style={styles.numberInput}
-                  placeholder="5"
-                  placeholderTextColor="#9CA3AF"
-                  value={programSettings.dayCount.toString()}
-                  onChangeText={(text) => {
-                    const value = parseInt(text) || 5;
-                    setProgramSettings({
-                      ...programSettings,
-                      dayCount: Math.min(Math.max(value, 1), 7) // 1-7 arası sınırla
-                    });
-                  }}
-                  keyboardType="numeric"
-                />
-              </View>
             </ScrollView>
 
             <TouchableOpacity 
-              style={styles.saveButton} 
+              style={styles.createProgramButton} 
               onPress={() => {
                 generateProgramTable();
                 setShowSettingsModal(false);
@@ -643,9 +780,9 @@ export default function ProgramCreationScreen() {
             >
               <LinearGradient
                 colors={['#4ECDC4', '#44A08D']}
-                style={styles.saveButtonGradient}
+                style={styles.createProgramButtonGradient}
               >
-                <Text style={styles.saveButtonText}>Program Oluştur</Text>
+                <Text style={styles.createProgramButtonText}>Program Oluştur</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -658,7 +795,6 @@ export default function ProgramCreationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
   },
   header: {
     paddingTop: 20,
@@ -727,13 +863,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1f2937',
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#6b7280',
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -782,7 +916,6 @@ const styles = StyleSheet.create({
   daySelectorLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
     marginBottom: 12,
   },
   daySelectorScroll: {
@@ -800,7 +933,6 @@ const styles = StyleSheet.create({
   dayOptionText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6b7280',
   },
   dayCard: {
     backgroundColor: 'white',
@@ -827,7 +959,10 @@ const styles = StyleSheet.create({
   dayTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f2937',
+  },
+  dayDate: {
+    fontSize: 14,
+    marginTop: 4,
   },
   dayStats: {
     backgroundColor: '#f0fdfa',
@@ -863,7 +998,6 @@ const styles = StyleSheet.create({
   },
   subjectInput: {
     fontSize: 16,
-    color: '#1f2937',
     backgroundColor: 'white',
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -891,11 +1025,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1f2937',
   },
   inputContainer: {
     marginBottom: 20,
@@ -903,7 +1039,6 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#374151',
     marginBottom: 8,
   },
   timeRangeContainer: {
@@ -925,7 +1060,6 @@ const styles = StyleSheet.create({
   timeSeparator: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#6b7280',
     marginHorizontal: 10,
   },
   numberInput: {
@@ -938,9 +1072,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9fafb',
     textAlign: 'center',
     fontWeight: '500',
-    color: '#374151',
   },
-  saveButton: {
+  createProgramButton: {
     borderRadius: 16,
     marginTop: 10,
     shadowColor: '#000',
@@ -952,13 +1085,13 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
-  saveButtonGradient: {
+  createProgramButtonGradient: {
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 16,
     alignItems: 'center',
   },
-  saveButtonText: {
+  createProgramButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
@@ -982,9 +1115,87 @@ const styles = StyleSheet.create({
   weekOptionText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6b7280',
   },
   selectedWeekOptionText: {
     color: 'white',
+  },
+  // Takvim stilleri
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  calendarNavButton: {
+    padding: 8,
+  },
+  calendarMonthText: {
+    fontSize: 18,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  calendarContainer: {
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  calendarWeekHeader: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  calendarWeekDayHeader: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  calendarWeekDayText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  calendarDaysContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  calendarDay: {
+    width: '14.28%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  calendarDayText: {
+    fontSize: 14,
+  },
+  calendarDayToday: {
+    borderWidth: 2,
+    borderColor: '#4ECDC4',
+  },
+  calendarDaySelected: {
+    backgroundColor: '#4ECDC4',
+  },
+  selectedDatesContainer: {
+    marginTop: 16,
+  },
+  selectedDatesLabel: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  selectedDatesList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  selectedDateChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 6,
+  },
+  selectedDateText: {
+    fontSize: 14,
   },
 });

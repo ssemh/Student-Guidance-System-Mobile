@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../contexts/ThemeContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface AnalysisResult {
   id: string;
@@ -45,40 +47,378 @@ export default function AnalysisScreen() {
   const [examName, setExamName] = useState('');
   const [examNames, setExamNames] = useState<string[]>([]);
   const [showExamNameDropdown, setShowExamNameDropdown] = useState(false);
+  const [userBranch, setUserBranch] = useState<string>('sayisal'); // Varsayılan sayısal
 
-  const subjects = [
-    'Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Türkçe', 'Tarih', 'Coğrafya',
-    'Edebiyat', 'İngilizce', 'Almanca', 'Din Kültürü', 'Felsefe'
-  ];
-
-  // Deneme analizi için özel ders listesi
-  const examSubjects = [
-    'Matematik Denemesi', 'Fizik Denemesi', 'Kimya Denemesi', 'Biyoloji Denemesi', 
-    'Türkçe Denemesi', 'Tarih Denemesi', 'Coğrafya Denemesi', 'Edebiyat Denemesi', 
-    'İngilizce Denemesi', 'Almanca Denemesi', 'Din Kültürü Denemesi', 'Felsefe Denemesi',
-    'TYT Denemesi', 'AYT Denemesi', 'Sosyal Denemesi', 'Fen Denemesi'
-  ];
+  // TÜM dersler - TYT konuları herkese açık olduğu için tüm dersler seçilebilir
+  // AYT konuları branşa göre filtrelenecek
+  // Not: Edebiyat kaldırıldı çünkü Türkçe ile aynı konuları kapsıyor
+  const allSubjects = ['Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Türkçe', 'Tarih', 'Coğrafya', 'Din Kültürü', 'Felsefe'];
   
-  const topics = {
-    'Matematik': ['Temel Matematik', 'Geometri', 'Trigonometri', 'Analiz', 'İstatistik', 'Olasılık', 'Logaritma', 'Türev', 'İntegral', 'Limit', 'Süreklilik', 'Fonksiyonlar'],
-    'Fizik': ['Mekanik', 'Elektrik', 'Optik', 'Termodinamik', 'Atom Fiziği', 'Dalgalar', 'Manyetizma', 'Nükleer Fizik', 'Kuantum Fiziği', 'Relativite', 'Akışkanlar', 'Ses'],
-    'Kimya': ['Genel Kimya', 'Organik Kimya', 'Analitik Kimya', 'Fizikokimya', 'Biyokimya', 'Çevre Kimyası', 'Polimer Kimyası', 'İnorganik Kimya', 'Endüstriyel Kimya', 'Gıda Kimyası', 'İlaç Kimyası'],
-    'Biyoloji': ['Hücre Biyolojisi', 'Genetik', 'Ekoloji', 'İnsan Biyolojisi', 'Bitki Biyolojisi', 'Mikrobiyoloji', 'Evrim', 'Sistemler', 'Üreme', 'Gelişim', 'Davranış', 'Popülasyon'],
-    'Türkçe': ['Dil Bilgisi', 'Anlam Bilgisi', 'Paragraf', 'Yazım Kuralları', 'Noktalama', 'Ses Bilgisi', 'Kelime Yapısı', 'Cümle Bilgisi', 'Sözcük Türleri', 'Fiilimsiler', 'Cümlenin Ögeleri'],
-    'Tarih': ['İnkılap Tarihi', 'Osmanlı Tarihi', 'Çağdaş Türk Tarihi', 'İlk Çağ Tarihi', 'Orta Çağ Tarihi', 'Yeni Çağ Tarihi', 'Yakın Çağ Tarihi', 'Türk Tarihi', 'Dünya Tarihi', 'Medeniyetler'],
-    'Coğrafya': ['Fiziki Coğrafya', 'Beşeri Coğrafya', 'Türkiye Coğrafyası', 'Ekonomik Coğrafya', 'Siyasi Coğrafya', 'Matematik Coğrafya', 'Küresel Ortam', 'Çevre ve Toplum', 'Doğal Afetler', 'İklim'],
-    'Edebiyat': ['Divan Edebiyatı', 'Halk Edebiyatı', 'Tanzimat Edebiyatı', 'Servet-i Fünun', 'Fecr-i Ati', 'Milli Edebiyat', 'Cumhuriyet Dönemi', 'Batı Edebiyatı', 'Edebi Akımlar', 'Şiir', 'Roman', 'Hikaye', 'Tiyatro'],
-    'İngilizce': ['Grammar', 'Vocabulary', 'Reading', 'Writing', 'Listening', 'Speaking', 'Tense', 'Modal Verbs', 'Conditionals', 'Passive Voice', 'Reported Speech', 'Gerunds', 'Infinitives', 'Participles', 'Clauses'],
-    'Almanca': ['Grammatik', 'Wortschatz', 'Lesen', 'Schreiben', 'Hören', 'Sprechen', 'Zeitformen', 'Artikel', 'Adjektivdeklination', 'Präpositionen', 'Konjunktionen', 'Nebensätze', 'Modalverben', 'Passiv'],
-    'Din Kültürü': ['İnanç', 'İbadet', 'Ahlak', 'Hz. Muhammed', 'Kur\'an-ı Kerim', 'İslam Tarihi', 'Dinler Tarihi', 'Felsefe ve Din', 'İslam Düşüncesi', 'İslam Medeniyeti', 'İslam Sanatı', 'İslam Bilimi'],
-    'Felsefe': ['Varlık Felsefesi', 'Bilgi Felsefesi', 'Ahlak Felsefesi', 'Siyaset Felsefesi', 'Bilim Felsefesi', 'Din Felsefesi', 'Sanat Felsefesi', 'Estetik', 'Mantık', 'Etik', 'Metafizik', 'Epistemoloji']
+  const subjects = allSubjects;
+
+  // Deneme analizi için özel ders listesi (alana göre)
+  const getExamSubjectsByBranch = (branch: string) => {
+    // Branşa göre temel dersler
+    let baseSubjects: string[] = [];
+    switch (branch) {
+      case 'sayisal':
+        baseSubjects = ['Matematik', 'Fizik', 'Kimya', 'Biyoloji'];
+        break;
+      case 'sozel':
+        baseSubjects = ['Türkçe', 'Tarih', 'Coğrafya', 'Din Kültürü', 'Felsefe'];
+        break;
+      case 'esit-agirlik':
+        baseSubjects = ['Türkçe', 'Matematik', 'Tarih', 'Coğrafya', 'Felsefe'];
+        break;
+      default:
+        baseSubjects = allSubjects;
+    }
+    
+    const examList = baseSubjects.map((subject: string) => `${subject} Denemesi`);
+    
+    // Ortak denemeler
+    examList.push('TYT Denemesi');
+    
+    if (branch === 'sayisal') {
+      examList.push('AYT Sayısal Denemesi', 'Fen Bilimleri Denemesi');
+    } else if (branch === 'sozel') {
+      examList.push('AYT Sözel Denemesi', 'Sosyal Bilimler Denemesi');
+    } else if (branch === 'esit-agirlik') {
+      examList.push('AYT Eşit Ağırlık Denemesi', 'Sosyal Bilimler Denemesi');
+    }
+    
+    return examList;
   };
 
-  // SecureStore'dan verileri yükle
+  const examSubjects = getExamSubjectsByBranch(userBranch);
+  
+  // TYT konuları - TÜM branşlarda STANDART (herkese aynı)
+  const tytTopics: {[key: string]: string[]} = {
+    'Matematik': [
+      'Temel Kavramlar',
+      'Sayılar',
+      'Rasyonel Sayılar',
+      'Eşitsizlikler',
+      'Mutlak Değer',
+      'Üslü Sayılar',
+      'Köklü Sayılar',
+      'Çarpanlara Ayırma',
+      'Oran-Orantı',
+      'Denklemler',
+      'Problemler',
+      'Fonksiyonlar',
+      'Geometri Temelleri'
+    ],
+    'Fizik': [
+      'Fizik Bilimine Giriş',
+      'Madde ve Özellikleri',
+      'Hareket ve Kuvvet',
+      'Enerji',
+      'Isı ve Sıcaklık',
+      'Basınç',
+      'Elektrik Temelleri',
+      'Manyetizma Temelleri'
+    ],
+    'Kimya': [
+      'Kimya Bilimi',
+      'Atom ve Yapısı',
+      'Periyodik Sistem',
+      'Kimyasal Bağlar',
+      'Mol Kavramı',
+      'Gazlar',
+      'Çözeltiler',
+      'Asit-Baz'
+    ],
+    'Biyoloji': [
+      'Canlıların Yapısı',
+      'Hücre',
+      'Sistemler',
+      'Kalıtım',
+      'Ekoloji',
+      'Bitki Biyolojisi',
+      'Hayvan Biyolojisi',
+      'İnsan Biyolojisi'
+    ],
+    'Türkçe': [
+      'Paragraf',
+      'Dil Bilgisi',
+      'Anlatım Bozuklukları',
+      'Noktalama İşaretleri',
+      'Yazım Kuralları',
+      'Ses Bilgisi',
+      'Kelime Bilgisi',
+      'Cümle Bilgisi'
+    ],
+    'Tarih': [
+      'İlk Uygarlıklar',
+      'İslam Tarihi',
+      'Türk-İslam Tarihi',
+      'Osmanlı Kuruluş',
+      'Osmanlı Yükselme',
+      'Osmanlı Duraklama',
+      'Osmanlı Gerileme',
+      'Osmanlı Dağılma'
+    ],
+    'Coğrafya': [
+      'Doğa ve İnsan',
+      'Dünya\'da İklimler',
+      'Türkiye\'nin İklimi',
+      'Nüfus ve Yerleşme',
+      'Ekonomik Faaliyetler',
+      'Türkiye\'nin Coğrafi Konumu',
+      'Türkiye\'nin Fiziki Coğrafyası',
+      'Türkiye\'nin Beşeri Coğrafyası'
+    ],
+    'Felsefe': [
+      'Felsefeye Giriş',
+      'Bilgi Felsefesi',
+      'Varlık Felsefesi',
+      'Ahlak Felsefesi',
+      'Sanat Felsefesi',
+      'Din Felsefesi',
+      'Siyaset Felsefesi',
+      'Bilim Felsefesi'
+    ],
+    'Din Kültürü': [
+      'İslam Dini Temel Bilgileri',
+      'Kur\'an-ı Kerim',
+      'Hz. Muhammed\'in Hayatı',
+      'İslam Ahlakı',
+      'İbadetler',
+      'İslam Tarihi',
+      'İslam Kültürü',
+      'Din ve Toplum'
+    ]
+  };
+
+  // AYT konuları - Branşa göre dinamik
+  const aytTopics: {[key: string]: {[branch: string]: string[]}} = {
+    'Matematik': {
+      'sayisal': [
+        'Polinomlar',
+        'İkinci Dereceden Denklemler',
+        'Trigonometri',
+        'Logaritma',
+        'Limit ve Türev',
+        'İntegral',
+        'Analitik Geometri',
+        'Diziler ve Seriler',
+        'Olasılık',
+        'İstatistik'
+      ],
+      'esit-agirlik': [
+        'Polinomlar',
+        'İkinci Dereceden Denklemler',
+        'Trigonometri',
+        'Logaritma',
+        'Limit ve Türev',
+        'İntegral',
+        'Analitik Geometri',
+        'Diziler ve Seriler',
+        'Olasılık',
+        'İstatistik'
+      ],
+      'sozel': []
+    },
+    'Fizik': {
+      'sayisal': [
+        'Elektrik ve Manyetizma',
+        'Dalgalar',
+        'Modern Fizik',
+        'Atom Fiziği',
+        'Nükleer Fizik',
+        'Optik',
+        'Mekanik',
+        'Termodinamik',
+        'Elektromanyetik Dalgalar',
+        'Fizikte Matematiksel Yöntemler'
+      ],
+      'esit-agirlik': [],
+      'sozel': []
+    },
+    'Kimya': {
+      'sayisal': [
+        'Gazlar',
+        'Sıvı Çözeltiler',
+        'Kimyasal Tepkimeler',
+        'Organik Kimya',
+        'Kimyasal Hesaplamalar',
+        'Elektrokimya',
+        'Termokimya',
+        'Kimyasal Denge',
+        'Çözünürlük Dengesi',
+        'Kimyasal Kinetik'
+      ],
+      'esit-agirlik': [],
+      'sozel': []
+    },
+    'Biyoloji': {
+      'sayisal': [
+        'Protein Sentezi',
+        'Fotosentez',
+        'Solunum',
+        'Evrim',
+        'Biyoteknoloji',
+        'Genetik',
+        'Populasyon Genetiği',
+        'Ekosistem',
+        'Hücresel Solunum',
+        'Bitki Fizyolojisi'
+      ],
+      'esit-agirlik': [],
+      'sozel': []
+    },
+    'Türkçe': {
+      'sayisal': [],
+      'esit-agirlik': [
+        'Eski Türk Edebiyatı',
+        'Tanzimat Edebiyatı',
+        'Servet-i Fünun Edebiyatı',
+        'Milli Edebiyat',
+        'Cumhuriyet Dönemi Edebiyatı',
+        'Çağdaş Türk Edebiyatı',
+        'Dünya Edebiyatı',
+        'Edebiyat Akımları'
+      ],
+      'sozel': [
+        'Eski Türk Edebiyatı',
+        'Tanzimat Edebiyatı',
+        'Servet-i Fünun Edebiyatı',
+        'Milli Edebiyat',
+        'Cumhuriyet Dönemi Edebiyatı',
+        'Çağdaş Türk Edebiyatı',
+        'Dünya Edebiyatı',
+        'Edebiyat Akımları'
+      ]
+    },
+    'Tarih': {
+      'sayisal': [],
+      'esit-agirlik': [
+        'İlk Çağ Uygarlıkları',
+        'Orta Çağ Tarihi',
+        'Yeni Çağ Tarihi',
+        'Yakın Çağ Tarihi',
+        'Türkiye Cumhuriyeti Tarihi',
+        'Dünya Savaşları',
+        'Soğuk Savaş Dönemi',
+        'Günümüz Dünyası'
+      ],
+      'sozel': [
+        'İlk Çağ Uygarlıkları',
+        'Orta Çağ Tarihi',
+        'Yeni Çağ Tarihi',
+        'Yakın Çağ Tarihi',
+        'Türkiye Cumhuriyeti Tarihi',
+        'Dünya Savaşları',
+        'Soğuk Savaş Dönemi',
+        'Günümüz Dünyası'
+      ]
+    },
+    'Coğrafya': {
+      'sayisal': [],
+      'esit-agirlik': [
+        'Fiziki Coğrafya',
+        'Beşeri Coğrafya',
+        'Ekonomik Coğrafya',
+        'Siyasi Coğrafya',
+        'Çevre ve Toplum',
+        'Küresel Ortam',
+        'Bölgeler ve Ülkeler',
+        'Türkiye Coğrafyası'
+      ],
+      'sozel': [
+        'Fiziki Coğrafya',
+        'Beşeri Coğrafya',
+        'Ekonomik Coğrafya',
+        'Siyasi Coğrafya',
+        'Çevre ve Toplum',
+        'Küresel Ortam',
+        'Bölgeler ve Ülkeler',
+        'Türkiye Coğrafyası'
+      ]
+    },
+    'Felsefe': {
+      'sayisal': [],
+      'esit-agirlik': [
+        'Felsefe Tarihi',
+        'Mantık',
+        'Psikoloji',
+        'Sosyoloji',
+        'Mantık ve Akıl Yürütme',
+        'Felsefi Düşünce',
+        'Felsefe ve Bilim',
+        'Felsefe ve Sanat'
+      ],
+      'sozel': [
+        'Felsefe Tarihi',
+        'Mantık',
+        'Psikoloji',
+        'Sosyoloji',
+        'Mantık ve Akıl Yürütme',
+        'Felsefi Düşünce',
+        'Felsefe ve Bilim',
+        'Felsefe ve Sanat'
+      ]
+    },
+    'Din Kültürü': {
+      'sayisal': [],
+      'esit-agirlik': [],
+      'sozel': [
+        'İslam Dini Temel Bilgileri',
+        'Kur\'an-ı Kerim',
+        'Hz. Muhammed\'in Hayatı',
+        'İslam Ahlakı',
+        'İbadetler',
+        'İslam Tarihi',
+        'İslam Kültürü',
+        'Din ve Toplum'
+      ]
+    }
+  };
+
+  // Ders seçildiğinde konuları getir: TYT (herkese) + AYT (branşa göre)
+  const getTopicsBySubject = (subject: string) => {
+    // TYT konuları - HERKES İÇİN STANDART
+    const tyt = tytTopics[subject] || [];
+    
+    // AYT konuları - BRANŞA GÖRE
+    const aytBranchData = aytTopics[subject];
+    const ayt = aytBranchData ? (aytBranchData[userBranch as keyof typeof aytBranchData] || []) : [];
+    
+    // TYT + AYT birleştir
+    return [...tyt, ...ayt];
+  };
+
+  // Seçilen dersin konularını al (liste)
+  const topicList = selectedSubject ? getTopicsBySubject(selectedSubject) : [];
+
+  // Profil verilerini yükle
   useEffect(() => {
     loadSavedResults();
     loadExamNames();
   }, []);
+
+  // Sayfa her açıldığında profil verilerini kontrol et
+  useFocusEffect(
+    useCallback(() => {
+      loadProfileBranch();
+    }, [])
+  );
+
+  // Kullanıcının seçtiği alanı yükle
+  const loadProfileBranch = async () => {
+    try {
+      const data = await AsyncStorage.getItem('profileData');
+      if (data) {
+        const parsedData = JSON.parse(data);
+        if (parsedData.branch) {
+          setUserBranch(parsedData.branch);
+        }
+      }
+    } catch (error) {
+      console.log('Profil verisi yüklenemedi:', error);
+    }
+  };
 
   // Deneme adlarını yükle
   const loadExamNames = async () => {
@@ -513,7 +853,7 @@ export default function AnalysisScreen() {
               </View>
               
               <ScrollView style={styles.modalScrollView} showsVerticalScrollIndicator={true}>
-                {topics[selectedSubject as keyof typeof topics]?.map((topic) => (
+                {topicList.map((topic) => (
                   <TouchableOpacity
                     key={topic}
                     style={[styles.modalItem, { backgroundColor: colors.surface }]}
@@ -1279,7 +1619,6 @@ const styles = StyleSheet.create({
     marginTop: 5,
     maxHeight: 200,
     zIndex: 9999999,
-    elevation: 99999,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
