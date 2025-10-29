@@ -11,11 +11,12 @@ import {
   TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as DocumentPicker from 'expo-document-picker';
 import { Audio } from 'expo-av';
 import { useTheme } from '../contexts/ThemeContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Tam Ekran TYT Deneme Bileşeni
 function FullscreenTYTPracticeView({ onClose }: { onClose: () => void }) {
@@ -499,8 +500,154 @@ function StopwatchView({ onBack, onFullscreen }: { onBack: () => void; onFullscr
   );
 }
 
+// Tam Ekran TYT Geri Sayım Bileşeni
+function FullscreenTYTCountdownView({ onClose }: { onClose: () => void }) {
+  const { colors } = useTheme();
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const targetDate = new Date('2026-06-20T00:00:00');
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const difference = targetDate.getTime() - now.getTime();
+
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        setTimeLeft({ days, hours, minutes, seconds });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <SafeAreaView style={styles.fullscreenContainer}>
+      <View style={styles.fullscreenContent}>
+        <TouchableOpacity 
+          style={styles.fullscreenCloseButton} 
+          onPress={onClose}
+        >
+          <Ionicons name="close" size={32} color="white" />
+        </TouchableOpacity>
+
+        <Text style={styles.fullscreenTitle}>TYT Geri Sayım</Text>
+
+        <View style={styles.fullscreenTimeContainer}>
+          <View style={styles.fullscreenTimeCircle}>
+            <Text style={styles.fullscreenTimeText}>{timeLeft.days.toString().padStart(2, '0')}</Text>
+          </View>
+          <Text style={styles.fullscreenSeparator}>:</Text>
+          <View style={styles.fullscreenTimeCircle}>
+            <Text style={styles.fullscreenTimeText}>{timeLeft.hours.toString().padStart(2, '0')}</Text>
+          </View>
+          <Text style={styles.fullscreenSeparator}>:</Text>
+          <View style={styles.fullscreenTimeCircle}>
+            <Text style={styles.fullscreenTimeText}>{timeLeft.minutes.toString().padStart(2, '0')}</Text>
+          </View>
+          <Text style={styles.fullscreenSeparator}>:</Text>
+          <View style={styles.fullscreenTimeCircle}>
+            <Text style={styles.fullscreenTimeText}>{timeLeft.seconds.toString().padStart(2, '0')}</Text>
+          </View>
+        </View>
+        
+        <View style={styles.fullscreenLabelContainer}>
+          <Text style={styles.fullscreenTimeLabel}>Gün</Text>
+          <Text style={styles.fullscreenLabelSeparator}>   </Text>
+          <Text style={styles.fullscreenTimeLabel}>Saat</Text>
+          <Text style={styles.fullscreenLabelSeparator}>   </Text>
+          <Text style={styles.fullscreenTimeLabel}>Dakika</Text>
+          <Text style={styles.fullscreenLabelSeparator}>   </Text>
+          <Text style={styles.fullscreenTimeLabel}>Saniye</Text>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+// Tam Ekran AYT Geri Sayım Bileşeni
+function FullscreenAYTCountdownView({ onClose }: { onClose: () => void }) {
+  const { colors } = useTheme();
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const targetDate = new Date('2026-06-21T00:00:00');
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const difference = targetDate.getTime() - now.getTime();
+
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        setTimeLeft({ days, hours, minutes, seconds });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <SafeAreaView style={styles.fullscreenContainer}>
+      <View style={styles.fullscreenContent}>
+        <TouchableOpacity 
+          style={styles.fullscreenCloseButton} 
+          onPress={onClose}
+        >
+          <Ionicons name="close" size={32} color="white" />
+        </TouchableOpacity>
+
+        <Text style={styles.fullscreenTitle}>AYT Geri Sayım</Text>
+
+        <View style={styles.fullscreenTimeContainer}>
+          <View style={styles.fullscreenTimeCircle}>
+            <Text style={styles.fullscreenTimeText}>{timeLeft.days.toString().padStart(2, '0')}</Text>
+          </View>
+          <Text style={styles.fullscreenSeparator}>:</Text>
+          <View style={styles.fullscreenTimeCircle}>
+            <Text style={styles.fullscreenTimeText}>{timeLeft.hours.toString().padStart(2, '0')}</Text>
+          </View>
+          <Text style={styles.fullscreenSeparator}>:</Text>
+          <View style={styles.fullscreenTimeCircle}>
+            <Text style={styles.fullscreenTimeText}>{timeLeft.minutes.toString().padStart(2, '0')}</Text>
+          </View>
+          <Text style={styles.fullscreenSeparator}>:</Text>
+          <View style={styles.fullscreenTimeCircle}>
+            <Text style={styles.fullscreenTimeText}>{timeLeft.seconds.toString().padStart(2, '0')}</Text>
+          </View>
+        </View>
+        
+        <View style={styles.fullscreenLabelContainer}>
+          <Text style={styles.fullscreenTimeLabel}>Gün</Text>
+          <Text style={styles.fullscreenLabelSeparator}>   </Text>
+          <Text style={styles.fullscreenTimeLabel}>Saat</Text>
+          <Text style={styles.fullscreenLabelSeparator}>   </Text>
+          <Text style={styles.fullscreenTimeLabel}>Dakika</Text>
+          <Text style={styles.fullscreenLabelSeparator}>   </Text>
+          <Text style={styles.fullscreenTimeLabel}>Saniye</Text>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+
 // TYT Geri Sayım Bileşeni
-function TYTCountdownView({ onBack }: { onBack: () => void }) {
+function TYTCountdownView({ onBack, onFullscreen }: { onBack: () => void; onFullscreen: () => void }) {
   const { colors } = useTheme();
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const targetDate = new Date('2026-06-20T00:00:00');
@@ -560,17 +707,24 @@ function TYTCountdownView({ onBack }: { onBack: () => void }) {
         <Text style={[styles.smallLabelText, { color: colors.textSecondary }]}>Saniye</Text>
       </View>
 
-      {/* Geri Butonu */}
-      <TouchableOpacity style={styles.backButton2} onPress={onBack}>
-        <Ionicons name="arrow-back" size={18} color="white" />
-        <Text style={styles.controlButtonText}>Geri</Text>
-      </TouchableOpacity>
+      {/* Kontrol Butonları */}
+      <View style={styles.countdownControls}>
+        <TouchableOpacity style={styles.backButton2} onPress={onBack}>
+          <Ionicons name="arrow-back" size={18} color="white" />
+          <Text style={styles.controlButtonText}>Geri</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.fullscreenButton} onPress={onFullscreen}>
+          <Ionicons name="expand" size={18} color="white" />
+          <Text style={styles.fullscreenButtonText}>Tam Ekran</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 // AYT Geri Sayım Bileşeni
-function AYTCountdownView({ onBack }: { onBack: () => void }) {
+function AYTCountdownView({ onBack, onFullscreen }: { onBack: () => void; onFullscreen: () => void }) {
   const { colors } = useTheme();
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const targetDate = new Date('2026-06-21T00:00:00');
@@ -630,11 +784,18 @@ function AYTCountdownView({ onBack }: { onBack: () => void }) {
         <Text style={[styles.smallLabelText, { color: colors.textSecondary }]}>Saniye</Text>
       </View>
 
-      {/* Geri Butonu */}
-      <TouchableOpacity style={styles.backButton2} onPress={onBack}>
-        <Ionicons name="arrow-back" size={18} color="white" />
-        <Text style={styles.controlButtonText}>Geri</Text>
-      </TouchableOpacity>
+      {/* Kontrol Butonları */}
+      <View style={styles.countdownControls}>
+        <TouchableOpacity style={styles.backButton2} onPress={onBack}>
+          <Ionicons name="arrow-back" size={18} color="white" />
+          <Text style={styles.controlButtonText}>Geri</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.fullscreenButton} onPress={onFullscreen}>
+          <Ionicons name="expand" size={18} color="white" />
+          <Text style={styles.fullscreenButtonText}>Tam Ekran</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -1334,12 +1495,106 @@ function TYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFulls
   );
 }
 
+// Mini Pano Önizleme Bileşeni
+function MiniBoardPreview() {
+  const { colors } = useTheme();
+  const navigation = useNavigation();
+  const [boardNotes, setBoardNotes] = useState<any[]>([]);
+  const [boardColor, setBoardColor] = useState('#D2691E');
+
+  const loadBoardData = async () => {
+    try {
+      const savedNotes = await AsyncStorage.getItem('boardNotes');
+      const savedSettings = await AsyncStorage.getItem('boardSettings');
+      
+      if (savedNotes) {
+        const notes = JSON.parse(savedNotes);
+        setBoardNotes(notes.slice(0, 6)); // İlk 6 notu göster
+      }
+      
+      if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        setBoardColor(settings.boardColor || '#D2691E');
+      }
+    } catch (error) {
+      console.log('Pano verisi yüklenirken hata:', error);
+    }
+  };
+
+  // İlk yükleme
+  useEffect(() => {
+    loadBoardData();
+  }, []);
+
+  // Sayfa her açıldığında verileri yeniden yükle
+  useFocusEffect(
+    React.useCallback(() => {
+      loadBoardData();
+    }, [])
+  );
+
+  return (
+    <TouchableOpacity 
+      style={styles.miniBoardContainer}
+      onPress={() => navigation.navigate('Pano' as never)}
+      activeOpacity={0.8}
+    >
+      <View style={styles.miniBoardHeader}>
+        <Ionicons name="clipboard" size={24} color="#1e40af" />
+        <Text style={[styles.miniBoardTitle, { color: colors.text }]}>Mantar Pano</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Pano' as never)}>
+          <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
+        </TouchableOpacity>
+      </View>
+      
+      <View style={[styles.miniBoard, { backgroundColor: boardColor, borderColor: '#8B4513' }]}>
+        {boardNotes.length === 0 ? (
+          <View style={styles.miniBoardEmpty}>
+            <Ionicons name="document-text-outline" size={32} color="#9ca3af" />
+            <Text style={styles.miniBoardEmptyText}>Henüz not yok</Text>
+          </View>
+        ) : (
+          <View style={styles.miniBoardNotes}>
+            {boardNotes.map((note, index) => {
+              // 6 not için 2x3 grid düzeni
+              const row = Math.floor(index / 3); // 0 veya 1
+              const col = index % 3; // 0, 1 veya 2
+              
+              return (
+                <View 
+                  key={note.id}
+                  style={[
+                    styles.miniNote,
+                    {
+                      backgroundColor: note.color || '#FFE066',
+                      transform: [{ rotate: `${(note.id.charCodeAt(0) % 9 - 4) * 0.3}deg` }],
+                      left: `${8 + col * 31}%`,
+                      top: `${8 + row * 42}%`,
+                    }
+                  ]}
+                >
+                  <Text style={styles.miniNoteTitle} numberOfLines={1}>{note.title}</Text>
+                  <Text style={styles.miniNoteContent} numberOfLines={2}>{note.content}</Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </View>
+      
+      <Text style={[styles.miniBoardFooter, { color: colors.textSecondary }]}>
+        Tüm notları görmek için dokunun
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
 export default function HomeScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const [showStopwatch, setShowStopwatch] = useState(false);
   const [showFullscreen, setShowFullscreen] = useState(false);
-  const [fullscreenType, setFullscreenType] = useState<'stopwatch' | 'tyt-practice' | 'ayt-practice' | 'custom-countdown' | null>(null);
+  const [fullscreenType, setFullscreenType] = useState<'stopwatch' | 'tyt-practice' | 'ayt-practice' | 'custom-countdown' | 'tyt-countdown' | 'ayt-countdown' | null>(null);
   const [fullscreenCustomDuration, setFullscreenCustomDuration] = useState(0);
   const [activeCounter, setActiveCounter] = useState<string | null>(null);
   const [customDuration, setCustomDuration] = useState(0);
@@ -1419,6 +1674,16 @@ export default function HomeScreen() {
               setShowFullscreen(false);
               setFullscreenType(null);
             }} />
+          ) : fullscreenType === 'tyt-countdown' ? (
+            <FullscreenTYTCountdownView onClose={() => {
+              setShowFullscreen(false);
+              setFullscreenType(null);
+            }} />
+          ) : fullscreenType === 'ayt-countdown' ? (
+            <FullscreenAYTCountdownView onClose={() => {
+              setShowFullscreen(false);
+              setFullscreenType(null);
+            }} />
           ) : fullscreenType === 'custom-countdown' ? (
             <FullscreenCustomCountdownView 
               onClose={() => {
@@ -1464,6 +1729,12 @@ export default function HomeScreen() {
             <Text style={styles.authorText}>— {dailyQuote.author}</Text>
           </LinearGradient>
         </View>
+
+        {/* Mini Pano Önizlemesi */}
+        <View style={styles.content}>
+          <MiniBoardPreview />
+        </View>
+
         {/* Sayaclar Kartı */}
         <View style={styles.content}>
           <View style={styles.statsCardHeader}>
@@ -1480,6 +1751,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.statsCardHeaderLine} />
           
+          <View style={styles.countersWrapper}>
               {!activeCounter ? (
             /* Sayaç Butonları */
             <View style={[styles.countersCard, { backgroundColor: colors.card }]}>
@@ -1542,10 +1814,22 @@ export default function HomeScreen() {
             />
           ) : activeCounter === 'tyt-countdown' ? (
             /* TYT Geri Sayım Gösterimi */
-            <TYTCountdownView onBack={() => setActiveCounter(null)} />
+            <TYTCountdownView 
+              onBack={() => setActiveCounter(null)}
+              onFullscreen={() => {
+                setFullscreenType('tyt-countdown');
+                setShowFullscreen(true);
+              }}
+            />
           ) : activeCounter === 'ayt-countdown' ? (
             /* AYT Geri Sayım Gösterimi */
-            <AYTCountdownView onBack={() => setActiveCounter(null)} />
+            <AYTCountdownView 
+              onBack={() => setActiveCounter(null)}
+              onFullscreen={() => {
+                setFullscreenType('ayt-countdown');
+                setShowFullscreen(true);
+              }}
+            />
           ) : activeCounter === 'tyt-practice' ? (
             /* TYT Deneme Gösterimi */
             <TYTPracticeView 
@@ -1584,8 +1868,9 @@ export default function HomeScreen() {
                 onBack={() => setActiveCounter(null)}
                 onStart={(dur) => setCustomDuration(dur)}
               />
-            )
+              )
           ) : null}
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -1703,6 +1988,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#1e40af',
     marginBottom: 20,
   },
+  countersWrapper: {
+    minHeight: 350, // Sabit minimum yükseklik - sayaç seçildiğinde küçülmesini önlemek için
+  },
   countersCard: {
     backgroundColor: 'white',
     borderRadius: 12,
@@ -1751,8 +2039,11 @@ const styles = StyleSheet.create({
   timeContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 20,
+    flexWrap: 'nowrap',
+    width: '100%',
+    paddingHorizontal: 10,
   },
   timeCircle: {
     width: 80,
@@ -1840,11 +2131,15 @@ const styles = StyleSheet.create({
   timeContainerWithLabels: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 20,
+    flexWrap: 'nowrap',
   },
   timeAndLabelWrapper: {
     alignItems: 'center',
+    marginHorizontal: 8,
+    justifyContent: 'flex-start',
+    minWidth: 80,
   },
   labelTextSmall: {
     fontSize: 12,
@@ -1852,9 +2147,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   smallTimeCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1868,17 +2163,23 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderWidth: 1,
     borderColor: '#f3f4f6',
+    marginHorizontal: 2,
+    flexShrink: 0,
+    alignSelf: 'flex-start',
   },
   smallTimeText: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#374151',
+    textAlign: 'center',
   },
   smallSeparator: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#374151',
-    marginHorizontal: 8,
+    marginHorizontal: 2,
+    alignSelf: 'flex-start',
+    lineHeight: 50,
   },
   smallLabelText: {
     fontSize: 10,
@@ -1915,6 +2216,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flex: 1,
   },
+  fullscreenButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  countdownControls: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 20,
+  },
   fullscreenOverlay: {
     flex: 1,
     backgroundColor: '#000000',
@@ -1950,10 +2262,10 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   fullscreenTitle: {
-    fontSize: 38,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#ffffff',
-    marginBottom: 40,
+    marginBottom: 30,
     textShadowColor: 'rgba(255, 255, 255, 0.3)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,
@@ -1961,14 +2273,15 @@ const styles = StyleSheet.create({
   fullscreenTimeContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 50,
+    alignItems: 'flex-start',
+    marginBottom: 30,
     flexWrap: 'nowrap',
+    paddingHorizontal: 10,
   },
   fullscreenTimeCircle: {
-    width: 85,
-    height: 85,
-    borderRadius: 42.5,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: '#1a2332',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1979,23 +2292,37 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 20,
     elevation: 10,
+    marginHorizontal: 4,
+    marginVertical: 8,
+    alignSelf: 'flex-start',
+    flexShrink: 0,
   },
   fullscreenTimeText: {
-    fontSize: 36,
+    fontSize: 28,
     fontWeight: '900',
     color: '#ffffff',
     textShadowColor: 'rgba(255, 255, 255, 0.5)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 15,
+    textAlign: 'center',
   },
   fullscreenSeparator: {
-    fontSize: 36,
-    fontWeight: '900',
+    fontSize: 28,
+    fontWeight: 'bold',
     color: '#ffffff',
-    marginHorizontal: 6,
-    textShadowColor: 'rgba(255, 255, 255, 0.3)',
+    marginHorizontal: 4,
+    textShadowColor: 'rgba(255, 255, 255, 0.5)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    textShadowRadius: 15,
+    alignSelf: 'flex-start',
+    lineHeight: 70,
+  },
+  fullscreenTimeLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#ffffff',
+    opacity: 0.8,
+    marginHorizontal: 8,
   },
   fullscreenControlsRow: {
     flexDirection: 'row',
@@ -2028,18 +2355,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 10,
+    paddingHorizontal: 10,
+  },
+  fullscreenLabelSeparator: {
+    fontSize: 12,
+    color: '#ffffff',
+    opacity: 0.3,
   },
   fullscreenLabelText: {
     fontSize: 16,
     color: '#ffffff',
     textAlign: 'center',
     width: 120,
-  },
-  fullscreenLabelSeparator: {
-    fontSize: 16,
-    color: '#ffffff',
-    marginHorizontal: 10,
   },
   fullscreenTimeAndLabelWrapper: {
     alignItems: 'center',
@@ -2200,5 +2528,76 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#374151',
+  },
+  miniBoardContainer: {
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  miniBoardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 10,
+  },
+  miniBoardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  miniBoard: {
+    width: '100%',
+    height: 240,
+    borderRadius: 12,
+    borderWidth: 4,
+    borderColor: '#8B4513',
+    position: 'relative',
+    overflow: 'hidden',
+    padding: 12,
+  },
+  miniBoardEmpty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniBoardEmptyText: {
+    fontSize: 14,
+    color: '#9ca3af',
+    marginTop: 8,
+  },
+  miniBoardNotes: {
+    flex: 1,
+    position: 'relative',
+  },
+  miniNote: {
+    position: 'absolute',
+    width: 90,
+    height: 85,
+    borderRadius: 6,
+    padding: 6,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  miniNoteTitle: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 3,
+  },
+  miniNoteContent: {
+    fontSize: 7,
+    color: '#4b5563',
+    lineHeight: 9,
+  },
+  miniBoardFooter: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 10,
+    fontStyle: 'italic',
   },
 });

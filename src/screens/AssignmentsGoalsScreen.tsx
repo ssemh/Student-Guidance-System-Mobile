@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function AssignmentsGoalsScreen() {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const navigation = useNavigation<any>();
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [selectedDay, setSelectedDay] = useState(0); // 0 = Pazartesi, 6 = Pazar
@@ -333,36 +333,36 @@ export default function AssignmentsGoalsScreen() {
           {activeBox === 'assignments' && (
             <View style={styles.contentArea}>
               {/* Hafta ve Gün Seçimi */}
-              <View style={styles.selectionCard}>
+              <View style={[styles.selectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 <View style={styles.weekSelector}>
                   <View style={styles.selectorHeader}>
                     <Ionicons name="calendar-outline" size={20} color="#4ECDC4" />
-                    <Text style={styles.sectionTitle}>Hafta Seçimi</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Hafta Seçimi</Text>
                   </View>
                   <TouchableOpacity 
-                    style={styles.pickerButton}
+                    style={[styles.pickerButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
                     onPress={() => setShowWeekPicker(true)}
                   >
-                    <Text style={styles.pickerText}>
+                    <Text style={[styles.pickerText, { color: colors.text }]}>
                       {selectedWeek === 0 ? 'Bu Hafta' : formatWeekRange(selectedWeek)}
                     </Text>
-                    <Ionicons name="chevron-down" size={20} color="#6b7280" />
+                    <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
                   </TouchableOpacity>
                 </View>
 
                 <View style={styles.daySelector}>
                   <View style={styles.selectorHeader}>
                     <Ionicons name="time-outline" size={20} color="#4ECDC4" />
-                    <Text style={styles.sectionTitle}>Gün Seçimi</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Gün Seçimi</Text>
                   </View>
                   <TouchableOpacity 
-                    style={styles.pickerButton}
+                    style={[styles.pickerButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
                     onPress={() => setShowDayPicker(true)}
                   >
-                    <Text style={styles.pickerText}>
+                    <Text style={[styles.pickerText, { color: colors.text }]}>
                       {formatSelectedDay()}
                     </Text>
-                    <Ionicons name="chevron-down" size={20} color="#6b7280" />
+                    <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -410,8 +410,8 @@ export default function AssignmentsGoalsScreen() {
             <View style={styles.contentArea}>
               <View style={styles.goalsHeader}>
                 <View>
-                  <Text style={styles.contentTitle}>Hedeflerim</Text>
-                  <Text style={styles.contentSubtitle}>Hedeflerinizi belirleyin ve takip edin</Text>
+                  <Text style={[styles.contentTitle, { color: colors.text }]}>Hedeflerim</Text>
+                  <Text style={[styles.contentSubtitle, { color: colors.textSecondary }]}>Hedeflerinizi belirleyin ve takip edin</Text>
                 </View>
                 <TouchableOpacity 
                   style={styles.addGoalButton}
@@ -427,29 +427,44 @@ export default function AssignmentsGoalsScreen() {
               </View>
 
               {/* Hedef Listesi */}
-              <View style={styles.goalsList}>
+              <View style={[styles.goalsList, { backgroundColor: colors.card }]}>
                 {goals.length > 0 ? (
                   goals
                     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                     .map((goal) => (
                     <View key={goal.id} style={[
                       styles.goalItem,
-                      goal.completed && styles.completedGoalItem
+                      { backgroundColor: goal.completed ? (isDarkMode ? '#1a1a1a' : '#f9fafb') : colors.surface },
+                      goal.completed && { opacity: 0.7 }
                     ]}>
                       <View style={styles.goalInfo}>
                         <Text style={[
                           styles.goalTitle,
-                          goal.completed && styles.completedGoalTitle
+                          { 
+                            color: goal.completed 
+                              ? (isDarkMode ? '#9ca3af' : '#9CA3AF')
+                              : colors.text,
+                            textDecorationLine: goal.completed ? 'line-through' : 'none'
+                          }
                         ]}>{goal.title}</Text>
                         {goal.description && (
                           <Text style={[
                             styles.goalDescription,
-                            goal.completed && styles.completedGoalDescription
+                            { 
+                              color: goal.completed 
+                                ? (isDarkMode ? '#6b7280' : '#D1D5DB')
+                                : colors.textSecondary,
+                              textDecorationLine: goal.completed ? 'line-through' : 'none'
+                            }
                           ]}>{goal.description}</Text>
                         )}
                         <Text style={[
                           styles.goalDate,
-                          goal.completed && styles.completedGoalDate
+                          { 
+                            color: goal.completed 
+                              ? (isDarkMode ? '#6b7280' : '#D1D5DB')
+                              : colors.textSecondary
+                          }
                         ]}>
                           {new Date(goal.createdAt).toLocaleDateString('tr-TR')}
                         </Text>
@@ -457,6 +472,7 @@ export default function AssignmentsGoalsScreen() {
                       <TouchableOpacity 
                         style={[
                           styles.completionButton,
+                          { borderColor: colors.border },
                           goal.completed && styles.completedButton
                         ]}
                         onPress={() => toggleGoalCompletion(goal.id)}
@@ -468,7 +484,7 @@ export default function AssignmentsGoalsScreen() {
                     </View>
                   ))
                 ) : (
-                  <Text style={styles.emptyText}>Henüz hedef eklenmemiş</Text>
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Henüz hedef eklenmemiş</Text>
                 )}
               </View>
             </View>
@@ -499,11 +515,11 @@ export default function AssignmentsGoalsScreen() {
         onRequestClose={() => setShowWeekPicker(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Hafta Seç</Text>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Hafta Seç</Text>
               <TouchableOpacity onPress={() => setShowWeekPicker(false)}>
-                <Ionicons name="close" size={24} color="#6b7280" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
             
@@ -511,9 +527,12 @@ export default function AssignmentsGoalsScreen() {
               {generateWeekOptions().map((option) => (
                 <TouchableOpacity
                   key={option.value}
-                  style={[
+                    style={[
                     styles.optionItem,
-                    selectedWeek === option.value && styles.selectedOption
+                    { borderBottomColor: colors.border },
+                    selectedWeek === option.value && { 
+                      backgroundColor: isDarkMode ? 'rgba(96, 165, 250, 0.2)' : 'rgba(59, 130, 246, 0.2)' 
+                    }
                   ]}
                   onPress={() => {
                     handleWeekChange(option.value);
@@ -522,12 +541,13 @@ export default function AssignmentsGoalsScreen() {
                 >
                   <Text style={[
                     styles.optionText,
-                    selectedWeek === option.value && styles.selectedOptionText
+                    { color: colors.text },
+                    selectedWeek === option.value && { color: colors.primary, fontWeight: '600' }
                   ]}>
                     {option.label}
                   </Text>
                   {selectedWeek === option.value && (
-                    <Ionicons name="checkmark" size={20} color="#3b82f6" />
+                    <Ionicons name="checkmark" size={20} color={colors.primary} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -544,11 +564,11 @@ export default function AssignmentsGoalsScreen() {
         onRequestClose={() => setShowDayPicker(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Gün Seç</Text>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Gün Seç</Text>
               <TouchableOpacity onPress={() => setShowDayPicker(false)}>
-                <Ionicons name="close" size={24} color="#6b7280" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
             
@@ -556,9 +576,12 @@ export default function AssignmentsGoalsScreen() {
               {generateDayOptions().map((option) => (
                 <TouchableOpacity
                   key={option.value}
-                  style={[
+                    style={[
                     styles.optionItem,
-                    selectedDay === option.value && styles.selectedOption
+                    { borderBottomColor: colors.border },
+                    selectedDay === option.value && { 
+                      backgroundColor: isDarkMode ? 'rgba(96, 165, 250, 0.2)' : 'rgba(59, 130, 246, 0.2)' 
+                    }
                   ]}
                   onPress={() => {
                     handleDayChange(option.value);
@@ -567,12 +590,13 @@ export default function AssignmentsGoalsScreen() {
                 >
                   <Text style={[
                     styles.optionText,
-                    selectedDay === option.value && styles.selectedOptionText
+                    { color: colors.text },
+                    selectedDay === option.value && { color: colors.primary, fontWeight: '600' }
                   ]}>
                     {option.label}
                   </Text>
                   {selectedDay === option.value && (
-                    <Ionicons name="checkmark" size={20} color="#3b82f6" />
+                    <Ionicons name="checkmark" size={20} color={colors.primary} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -589,32 +613,32 @@ export default function AssignmentsGoalsScreen() {
         onRequestClose={() => setShowGoalModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.goalModalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Yeni Hedef Ekle</Text>
+          <View style={[styles.goalModalContent, { backgroundColor: colors.card }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Yeni Hedef Ekle</Text>
               <TouchableOpacity onPress={() => setShowGoalModal(false)}>
-                <Ionicons name="close" size={24} color="#6b7280" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
             
             <View style={styles.goalForm}>
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Hedef Başlığı *</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>Hedef Başlığı *</Text>
                 <TextInput
-                  style={styles.goalTextInput}
+                  style={[styles.goalTextInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                   placeholder="Hedef başlığını girin..."
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.textSecondary}
                   value={goalTitle}
                   onChangeText={setGoalTitle}
                 />
               </View>
               
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Hedef Açıklaması</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>Hedef Açıklaması</Text>
                 <TextInput
-                  style={[styles.goalTextInput, styles.goalDescriptionInput]}
+                  style={[styles.goalTextInput, styles.goalDescriptionInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                   placeholder="Hedef açıklamasını girin..."
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.textSecondary}
                   value={goalDescription}
                   onChangeText={setGoalDescription}
                   multiline={true}
@@ -624,14 +648,14 @@ export default function AssignmentsGoalsScreen() {
               
               <View style={styles.goalModalButtons}>
                 <TouchableOpacity 
-                  style={styles.cancelButton}
+                  style={[styles.cancelButton, { backgroundColor: colors.surface }]}
                   onPress={() => {
                     setGoalTitle('');
                     setGoalDescription('');
                     setShowGoalModal(false);
                   }}
                 >
-                  <Text style={styles.cancelButtonText}>İptal</Text>
+                  <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>İptal</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity 
@@ -715,7 +739,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f2937',
   },
   optionsList: {
     maxHeight: 400,
@@ -733,7 +756,6 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 16,
-    color: '#1f2937',
   },
   selectedOptionText: {
     color: '#3b82f6',
@@ -783,6 +805,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -809,7 +832,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
     marginLeft: 8,
   },
   pickerButton: {
@@ -833,7 +855,6 @@ const styles = StyleSheet.create({
   },
   pickerText: {
     fontSize: 16,
-    color: '#374151',
     flex: 1,
   },
   goalInputContainer: {
@@ -862,7 +883,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#9CA3AF',
     textAlign: 'center',
   },
   fab: {
@@ -969,12 +989,10 @@ const styles = StyleSheet.create({
   contentTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1f2937',
     marginBottom: 8,
   },
   contentSubtitle: {
     fontSize: 14,
-    color: '#6b7280',
     marginBottom: 20,
   },
   // Hedef ekleme butonu stilleri
@@ -1028,17 +1046,14 @@ const styles = StyleSheet.create({
   goalTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
     marginBottom: 4,
   },
   goalDescription: {
     fontSize: 14,
-    color: '#6b7280',
     marginBottom: 4,
   },
   goalDate: {
     fontSize: 12,
-    color: '#9CA3AF',
   },
   // Tamamlama butonu stilleri
   completionButton: {
@@ -1064,22 +1079,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
     borderColor: '#10B981',
   },
-  // Tamamlanmış hedef stilleri
-  completedGoalItem: {
-    opacity: 0.6,
-    backgroundColor: '#F9FAFB',
-  },
-  completedGoalTitle: {
-    textDecorationLine: 'line-through',
-    color: '#9CA3AF',
-  },
-  completedGoalDescription: {
-    textDecorationLine: 'line-through',
-    color: '#D1D5DB',
-  },
-  completedGoalDate: {
-    color: '#D1D5DB',
-  },
+  // Tamamlanmış hedef stilleri (artık dinamik renkler kullanıldığı için gerekli değil)
   // Hedef modal stilleri
   goalModalContent: {
     backgroundColor: 'white',
@@ -1096,7 +1096,6 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
     marginBottom: 8,
   },
   goalTextInput: {
@@ -1107,7 +1106,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    color: '#1f2937',
   },
   goalDescriptionInput: {
     height: 100,
@@ -1129,7 +1127,6 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6b7280',
   },
   saveButton: {
     flex: 1,

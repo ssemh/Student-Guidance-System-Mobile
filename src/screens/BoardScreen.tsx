@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   Alert,
   Modal,
   Image,
+  PanResponder,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,6 +28,8 @@ interface Note {
   date: string;
   color: string;
   isFavorite: boolean;
+  x?: number;
+  y?: number;
 }
 
 export default function BoardScreen() {
@@ -70,7 +74,14 @@ export default function BoardScreen() {
       console.log('Yüklenen ayarlar:', savedSettings);
       
       if (savedNotes) {
-        setNotes(JSON.parse(savedNotes));
+        const parsedNotes = JSON.parse(savedNotes);
+        // Eski notlar için varsayılan pozisyonlar ekle
+        const notesWithPositions = parsedNotes.map((note: Note, index: number) => ({
+          ...note,
+          x: note.x !== undefined ? note.x : Math.random() * 100,
+          y: note.y !== undefined ? note.y : Math.floor(index / 2) * 200 + Math.random() * 50,
+        }));
+        setNotes(notesWithPositions);
       }
       
       if (savedSettings) {
@@ -137,6 +148,8 @@ export default function BoardScreen() {
       date: new Date().toLocaleDateString('tr-TR'),
       color: selectedColor,
       isFavorite: false,
+      x: Math.random() * 100,
+      y: Math.random() * 200,
     };
 
     const updatedNotes = [newNote, ...notes];
@@ -257,6 +270,104 @@ export default function BoardScreen() {
            new Date(a.date.split('.').reverse().join('-')).getTime();
   });
 
+  // Not kartı komponenti - sürükle bırak için
+  const DraggableNote = React.memo(({ 
+    note, 
+    onPositionUpdate,
+    onToggleFavorite,
+    onEditNote,
+    onDeleteNote,
+    fontFamily,
+    selectedTextColor,
+  }: { 
+    note: Note; 
+    onPositionUpdate: (id: string, x: number, y: number) => void;
+    onToggleFavorite: (id: string) => void;
+    onEditNote: (note: Note) => void;
+    onDeleteNote: (id: string) => void;
+    fontFamily: string;
+    selectedTextColor: string;
+  }) => {
+    const rotation = (note.id.charCodeAt(0) % 9 - 4) * 1.0;
+    const pan = useRef(new Animated.ValueXY({
+      x: note.x || 0,
+      y: note.y || 0,
+    })).current;
+
+    const panResponder = useRef(
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: () => {
+          pan.setOffset({
+            x: (pan.x as any).__getValue(),
+            y: (pan.y as any).__getValue(),
+          });
+          pan.setValue({ x: 0, y: 0 });
+        },
+        onPanResponderMove: Animated.event(
+          [null, { dx: pan.x, dy: pan.y }],
+          { useNativeDriver: false }
+        ),
+        onPanResponderRelease: () => {
+          pan.flattenOffset();
+          const newX = (pan.x as any).__getValue();
+          const newY = (pan.y as any).__getValue();
+          onPositionUpdate(note.id, newX, newY);
+        },
+      })
+    ).current;
+
+    // Pozisyon değiştiğinde animasyon değerini güncelle
+    useEffect(() => {
+      if (note.x !== undefined && note.y !== undefined) {
+        pan.setValue({ x: note.x, y: note.y });
+      }
+    }, [note.x, note.y]);
+
+    return (
+      <Animated.View
+        style={[
+          styles.noteCard,
+          {
+            backgroundColor: note.color,
+            transform: [
+              { rotate: `${rotation}deg` },
+              { translateX: pan.x },
+              { translateY: pan.y },
+            ],
+          },
+        ]}
+        {...panResponder.panHandlers}
+      >
+        <View style={styles.noteHeader}>
+          <Text style={[styles.noteTitle, { fontFamily: fontFamily, color: selectedTextColor }]} numberOfLines={2}>{note.title}</Text>
+          <View style={styles.noteActions}>
+            <TouchableOpacity onPress={() => onToggleFavorite(note.id)}>
+              <Ionicons 
+                name={note.isFavorite ? "star" : "star-outline"} 
+                size={18} 
+                color={note.isFavorite ? "#ef4444" : "#6b7280"} 
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => onEditNote(note)}>
+              <Ionicons name="create-outline" size={18} color="#6b7280" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => onDeleteNote(note.id)}>
+              <Ionicons name="trash-outline" size={18} color="#ef4444" />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <Text style={[styles.noteText, { fontFamily: fontFamily, color: selectedTextColor }]} numberOfLines={4}>
+          {note.content}
+        </Text>
+        <View style={styles.noteFooter}>
+          <Text style={styles.noteDate}>{note.date}</Text>
+        </View>
+      </Animated.View>
+    );
+  });
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <LinearGradient
@@ -282,7 +393,7 @@ export default function BoardScreen() {
           <View style={[
             styles.corkBoard,
             { 
-              minHeight: Math.max(600, Math.ceil(filteredNotes.length / 2) * 250 + 120),
+              minHeight: Math.max(800, Math.ceil(filteredNotes.length / 3) * 180 + 200),
               backgroundColor: boardImage ? 'transparent' : boardColor,
               borderColor: frameColor,
             }
@@ -306,42 +417,24 @@ export default function BoardScreen() {
                   </Text>
                 </View>
               ) : (
-                filteredNotes.map((note, index) => {
-                  // Resimdeki gibi doğal rastgele pozisyonlar - daha yumuşak
-                  const rotation = (note.id.charCodeAt(0) % 9 - 4) * 1.0; // -4 ile +4 arası
-                  
-                  return (
-                    <View key={note.id} style={[styles.noteCard, { 
-                      transform: [{ rotate: `${rotation}deg` }],
-                      backgroundColor: note.color, // Not rengini kullan
-                    }]}>
-                      <View style={styles.noteHeader}>
-                        <Text style={[styles.noteTitle, { fontFamily: fontFamily, color: selectedTextColor }]} numberOfLines={2}>{note.title}</Text>
-                        <View style={styles.noteActions}>
-                          <TouchableOpacity onPress={() => toggleFavorite(note.id)}>
-                            <Ionicons 
-                              name={note.isFavorite ? "star" : "star-outline"} 
-                              size={20} 
-                              color={note.isFavorite ? "#ef4444" : "#6b7280"} 
-                            />
-                          </TouchableOpacity>
-                          <TouchableOpacity onPress={() => editNote(note)}>
-                            <Ionicons name="create-outline" size={20} color="#6b7280" />
-                          </TouchableOpacity>
-                          <TouchableOpacity onPress={() => deleteNote(note.id)}>
-                            <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                      <Text style={[styles.noteText, { fontFamily: fontFamily, color: selectedTextColor }]} numberOfLines={6}>
-                        {note.content}
-                      </Text>
-                      <View style={styles.noteFooter}>
-                        <Text style={styles.noteDate}>{note.date}</Text>
-                      </View>
-                    </View>
-                  );
-                })
+                filteredNotes.map((note) => (
+                  <DraggableNote
+                    key={note.id}
+                    note={note}
+                    onPositionUpdate={(id, x, y) => {
+                      const updatedNotes = notes.map((n) =>
+                        n.id === id ? { ...n, x, y } : n
+                      );
+                      setNotes(updatedNotes);
+                      saveNotes(updatedNotes);
+                    }}
+                    onToggleFavorite={toggleFavorite}
+                    onEditNote={editNote}
+                    onDeleteNote={deleteNote}
+                    fontFamily={fontFamily}
+                    selectedTextColor={selectedTextColor}
+                  />
+                ))
               )}
             </View>
           </View>
@@ -698,22 +791,24 @@ const styles = StyleSheet.create({
     borderRadius: 12, // Normal köşeler
     borderWidth: 6, // Normal çerçeve kalınlığı
     borderColor: '#8B4513', // Düz kahverengi çerçeve
-    minHeight: 600, // Normal yükseklik
-    position: 'relative',
+    minHeight: 800, // Yeterli yükseklik
+    width: '90%', // Genişlik sabit
     alignSelf: 'center', // Pano ortalama
-    maxWidth: '90%', // Normal genişlik
+    position: 'relative',
+    overflow: 'hidden', // Notların panodan taşmaması için
     // Basit mantar dokusu için
     borderStyle: 'solid',
   },
   notesContainer: {
-    flex: 1,
-    paddingHorizontal: 30, // Sadece yatay padding
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 30,
     paddingVertical: 30,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center', // Tam ortalama
-    alignItems: 'flex-start',
-    width: '100%', // Tam genişlik
+    width: '100%',
+    height: '100%',
   },
   emptyState: {
     alignItems: 'center',
@@ -733,22 +828,21 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   noteCard: {
-    width: 280, // Enine doğru biraz daha büyütüldü
-    height: 160, // Yükseklik aynı - yatay dikdörtgen
-    backgroundColor: '#FFE066', // Varsayılan sarı renk
-    borderRadius: 12, // Daha yuvarlak köşeler
-    marginBottom: 20,
-    marginRight: 20, // Sağdan boşluk
+    width: 180, // Küçültüldü
+    height: 120, // Küçültüldü
+    backgroundColor: '#FFE066',
+    borderRadius: 8,
+    position: 'absolute',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     elevation: 8,
-    // Çerçeve kaldırıldı - not kağıdı rengiyle aynı
-    padding: 16,
+    padding: 12,
+    zIndex: 1,
   },
   noteContent: {
     flex: 1,
@@ -761,21 +855,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   noteTitle: {
-    fontSize: 20,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#1f2937',
     flex: 1,
-    marginRight: 8,
+    marginRight: 4,
   },
   noteActions: {
     flexDirection: 'row',
     gap: 8,
   },
   noteText: {
-    fontSize: 15,
+    fontSize: 11,
     color: '#4b5563',
-    lineHeight: 22,
-    marginBottom: 8,
+    lineHeight: 16,
+    marginBottom: 6,
     flex: 1,
   },
   noteFooter: {
@@ -793,8 +887,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   noteDate: {
-    fontSize: 13,
-    color: '#6b7280', // Daha koyu gri
+    fontSize: 10,
+    color: '#6b7280',
   },
   fabContainer: {
     position: 'absolute',
