@@ -114,7 +114,55 @@ function FullscreenCustomCountdownView({
 }) {
   const [timeLeft, setTimeLeft] = useState(duration * 60);
   const [isRunning, setIsRunning] = useState(false);
+  const [selectedSound, setSelectedSound] = useState<{ uri: string; name: string } | null>(null);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
+  const soundRef = React.useRef<Audio.Sound | null>(null);
+
+  const playSound = async () => {
+    try {
+      if (selectedSound) {
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: selectedSound.uri },
+          { shouldPlay: true }
+        );
+        await sound.playAsync();
+        soundRef.current = sound;
+      }
+    } catch (error) {
+      console.error('Ses çalınamadı:', error);
+    }
+  };
+
+  const stopSound = async () => {
+    try {
+      if (soundRef.current) {
+        await soundRef.current.stopAsync();
+        await soundRef.current.unloadAsync();
+        soundRef.current = null;
+      }
+    } catch (error) {
+      console.error('Ses durdurulamadı:', error);
+    }
+  };
+
+  const pickSound = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'audio/*',
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setSelectedSound({
+          uri: result.assets[0].uri,
+          name: result.assets[0].name || 'Ses',
+        });
+        Alert.alert('Başarılı', 'Ses seçildi: ' + result.assets[0].name);
+      }
+    } catch (error) {
+      Alert.alert('Hata', 'Ses seçilemedi');
+    }
+  };
 
   useEffect(() => {
     if (isRunning && timeLeft > 0) {
@@ -122,7 +170,10 @@ function FullscreenCustomCountdownView({
         setTimeLeft(prev => {
           if (prev <= 1) {
             setIsRunning(false);
-            Alert.alert('Süre Doldu!', 'Geri sayımınız tamamlandı.');
+            Alert.alert('Süre Doldu!', 'Geri sayımınız tamamlandı.', [
+              { text: 'Tamam', onPress: stopSound }
+            ]);
+            playSound();
             return 0;
           }
           return prev - 1;
@@ -195,6 +246,15 @@ function FullscreenCustomCountdownView({
           >
             <Ionicons name="refresh" size={24} color="white" />
             <Text style={styles.fullscreenControlText}>Sıfırla</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.fullscreenControlButton}
+            onPress={pickSound}
+          >
+            <Ionicons name="volume-high" size={24} color="white" />
+            <Text style={styles.fullscreenControlText}>
+              {selectedSound ? 'Ses: ' + selectedSound.name.substring(0, 10) : 'Ses Seç'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -482,7 +542,7 @@ function StopwatchView({ onBack, onFullscreen }: { onBack: () => void; onFullscr
         </TouchableOpacity>
       </View>
 
-      <View style={styles.stopwatchButtonsRow}>
+      <View style={styles.countdownControls}>
         <TouchableOpacity style={styles.backButton2} onPress={onBack}>
           <Ionicons name="arrow-back" size={18} color="white" />
           <Text style={styles.controlButtonText}>Geri</Text>
@@ -493,7 +553,7 @@ function StopwatchView({ onBack, onFullscreen }: { onBack: () => void; onFullscr
           onPress={onFullscreen}
         >
           <Ionicons name="expand" size={18} color="white" />
-          <Text style={styles.controlButtonText}>Tam Ekran</Text>
+          <Text style={styles.fullscreenButtonText}>Tam Ekran</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -970,18 +1030,22 @@ function CustomCountdownView({
         </TouchableOpacity>
       </View>
 
-      <View style={styles.stopwatchButtonsRow}>
-        <TouchableOpacity style={styles.backButton2} onPress={onBack}>
+      {/* Navigasyon ve Tam Ekran Butonları */}
+      <View style={[styles.countdownControls, { width: '100%', marginTop: 15, marginBottom: 0 }]}>
+        <TouchableOpacity 
+          style={[styles.backButton2, { flex: 1 }]} 
+          onPress={onBack}
+        >
           <Ionicons name="arrow-back" size={18} color="white" />
           <Text style={styles.controlButtonText}>Geri</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={styles.fullscreenButton}
+          style={[styles.fullscreenButton, { flex: 1 }]}
           onPress={() => onFullscreen(customDuration)}
         >
           <Ionicons name="expand" size={18} color="white" />
-          <Text style={styles.controlButtonText}>Tam Ekran</Text>
+          <Text style={styles.fullscreenButtonText}>Tam Ekran</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -1299,7 +1363,7 @@ function AYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFulls
         </TouchableOpacity>
       </View>
 
-      <View style={styles.stopwatchButtonsRow}>
+      <View style={styles.countdownControls}>
         <TouchableOpacity style={styles.backButton2} onPress={onBack}>
           <Ionicons name="arrow-back" size={18} color="white" />
           <Text style={styles.controlButtonText}>Geri</Text>
@@ -1310,7 +1374,7 @@ function AYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFulls
           onPress={onFullscreen}
         >
           <Ionicons name="expand" size={18} color="white" />
-          <Text style={styles.controlButtonText}>Tam Ekran</Text>
+          <Text style={styles.fullscreenButtonText}>Tam Ekran</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -1477,7 +1541,7 @@ function TYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFulls
         </TouchableOpacity>
       </View>
 
-      <View style={styles.stopwatchButtonsRow}>
+      <View style={styles.countdownControls}>
         <TouchableOpacity style={styles.backButton2} onPress={onBack}>
           <Ionicons name="arrow-back" size={18} color="white" />
           <Text style={styles.controlButtonText}>Geri</Text>
@@ -1488,7 +1552,7 @@ function TYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFulls
           onPress={onFullscreen}
         >
           <Ionicons name="expand" size={18} color="white" />
-          <Text style={styles.controlButtonText}>Tam Ekran</Text>
+          <Text style={styles.fullscreenButtonText}>Tam Ekran</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -2107,9 +2171,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 8,
     justifyContent: 'center',
-    marginTop: 20,
     flex: 1,
-    marginRight: 8,
   },
   labelContainer: {
     flexDirection: 'row',
@@ -2147,9 +2209,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   smallTimeCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 65,
+    height: 65,
+    borderRadius: 32.5,
     backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
@@ -2163,23 +2225,23 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderWidth: 1,
     borderColor: '#f3f4f6',
-    marginHorizontal: 2,
+    marginHorizontal: 4,
     flexShrink: 0,
     alignSelf: 'flex-start',
   },
   smallTimeText: {
-    fontSize: 16,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#374151',
     textAlign: 'center',
   },
   smallSeparator: {
-    fontSize: 16,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#374151',
-    marginHorizontal: 2,
+    marginHorizontal: 4,
     alignSelf: 'flex-start',
-    lineHeight: 50,
+    lineHeight: 65,
   },
   smallLabelText: {
     fontSize: 10,
@@ -2221,11 +2283,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 6,
+    flexShrink: 1,
   },
   countdownControls: {
     flexDirection: 'row',
     gap: 10,
     marginTop: 20,
+    alignItems: 'stretch',
   },
   fullscreenOverlay: {
     flex: 1,
