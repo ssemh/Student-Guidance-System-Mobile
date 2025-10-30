@@ -19,9 +19,9 @@ import { useTheme } from '../contexts/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Tam Ekran TYT Deneme Bileşeni
-function FullscreenTYTPracticeView({ onClose }: { onClose: () => void }) {
-  const [timeLeft, setTimeLeft] = useState(165 * 60);
-  const [isRunning, setIsRunning] = useState(false);
+function FullscreenTYTPracticeView({ onClose, initialTimeLeft, initialIsRunning }: { onClose: (p?: { timeLeft: number; isRunning: boolean }) => void; initialTimeLeft?: number; initialIsRunning?: boolean }) {
+  const [timeLeft, setTimeLeft] = useState(initialTimeLeft ?? (165 * 60));
+  const [isRunning, setIsRunning] = useState(initialIsRunning ?? false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ function FullscreenTYTPracticeView({ onClose }: { onClose: () => void }) {
       <View style={styles.fullscreenContent}>
         <TouchableOpacity 
           style={styles.fullscreenCloseButton} 
-          onPress={onClose}
+          onPress={() => onClose({ timeLeft, isRunning })}
         >
           <Ionicons name="close" size={32} color="white" />
         </TouchableOpacity>
@@ -107,13 +107,17 @@ function FullscreenTYTPracticeView({ onClose }: { onClose: () => void }) {
 // Özel Geri Sayım Tam Ekran Bileşeni
 function FullscreenCustomCountdownView({ 
   onClose, 
-  duration 
+  duration, 
+  initialTimeLeftSeconds,
+  initialIsRunning,
 }: { 
-  onClose: () => void; 
+  onClose: (p?: { timeLeftSeconds: number; isRunning: boolean }) => void; 
   duration: number;
+  initialTimeLeftSeconds?: number;
+  initialIsRunning?: boolean;
 }) {
-  const [timeLeft, setTimeLeft] = useState(duration * 60);
-  const [isRunning, setIsRunning] = useState(false);
+  const [timeLeft, setTimeLeft] = useState((initialTimeLeftSeconds ?? (duration * 60)));
+  const [isRunning, setIsRunning] = useState(initialIsRunning ?? false);
   const [selectedSound, setSelectedSound] = useState<{ uri: string; name: string } | null>(null);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const soundRef = React.useRef<Audio.Sound | null>(null);
@@ -206,7 +210,7 @@ function FullscreenCustomCountdownView({
       <View style={styles.fullscreenContent}>
         <TouchableOpacity 
           style={styles.fullscreenCloseButton} 
-          onPress={onClose}
+          onPress={() => onClose({ timeLeftSeconds: timeLeft, isRunning })}
         >
           <Ionicons name="close" size={32} color="white" />
         </TouchableOpacity>
@@ -263,9 +267,9 @@ function FullscreenCustomCountdownView({
 }
 
 // Tam Ekran AYT Deneme Bileşeni
-function FullscreenAYTPracticeView({ onClose }: { onClose: () => void }) {
-  const [timeLeft, setTimeLeft] = useState(180 * 60);
-  const [isRunning, setIsRunning] = useState(false);
+function FullscreenAYTPracticeView({ onClose, initialTimeLeft, initialIsRunning }: { onClose: (p?: { timeLeft: number; isRunning: boolean }) => void; initialTimeLeft?: number; initialIsRunning?: boolean }) {
+  const [timeLeft, setTimeLeft] = useState(initialTimeLeft ?? (180 * 60));
+  const [isRunning, setIsRunning] = useState(initialIsRunning ?? false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -305,7 +309,7 @@ function FullscreenAYTPracticeView({ onClose }: { onClose: () => void }) {
       <View style={styles.fullscreenContent}>
         <TouchableOpacity 
           style={styles.fullscreenCloseButton} 
-          onPress={onClose}
+          onPress={() => onClose({ timeLeft, isRunning })}
         >
           <Ionicons name="close" size={32} color="white" />
         </TouchableOpacity>
@@ -349,9 +353,9 @@ function FullscreenAYTPracticeView({ onClose }: { onClose: () => void }) {
 }
 
 // Tam Ekran Kronometre Bileşeni
-function FullscreenStopwatchView({ onClose }: { onClose: () => void }) {
-  const [time, setTime] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
+function FullscreenStopwatchView({ onClose, initialTime, initialIsRunning }: { onClose: (p?: { time: number; isRunning: boolean }) => void; initialTime?: number; initialIsRunning?: boolean }) {
+  const [time, setTime] = useState(initialTime ?? 0);
+  const [isRunning, setIsRunning] = useState(initialIsRunning ?? false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -387,7 +391,7 @@ function FullscreenStopwatchView({ onClose }: { onClose: () => void }) {
         <View style={styles.fullscreenContent}>
         <TouchableOpacity 
           style={styles.fullscreenCloseButton} 
-          onPress={onClose}
+          onPress={() => onClose({ time, isRunning })}
         >
           <Ionicons name="close" size={32} color="white" />
         </TouchableOpacity>
@@ -445,7 +449,7 @@ function FullscreenStopwatchView({ onClose }: { onClose: () => void }) {
 }
 
 // Kronometre Bileşeni
-function StopwatchView({ onBack, onFullscreen }: { onBack: () => void; onFullscreen: () => void }) {
+function StopwatchView({ onBack, onFullscreen, externalState }: { onBack: () => void; onFullscreen: (p: { time: number; isRunning: boolean }) => void; externalState?: { time?: number; isRunning?: boolean } | null }) {
   const { colors } = useTheme();
   const [time, setTime] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
@@ -467,6 +471,17 @@ function StopwatchView({ onBack, onFullscreen }: { onBack: () => void; onFullscr
       }
     };
   }, [isRunning]);
+
+  useEffect(() => {
+    if (externalState) {
+      if (typeof externalState.time === 'number') {
+        setTime(externalState.time);
+      }
+      if (typeof externalState.isRunning === 'boolean') {
+        setIsRunning(externalState.isRunning);
+      }
+    }
+  }, [externalState?.time, externalState?.isRunning]);
 
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -550,7 +565,7 @@ function StopwatchView({ onBack, onFullscreen }: { onBack: () => void; onFullscr
         
         <TouchableOpacity 
           style={styles.fullscreenButton}
-          onPress={onFullscreen}
+          onPress={() => onFullscreen({ time, isRunning })}
         >
           <Ionicons name="expand" size={18} color="white" />
           <Text style={styles.fullscreenButtonText}>Tam Ekran</Text>
@@ -864,11 +879,13 @@ function AYTCountdownView({ onBack, onFullscreen }: { onBack: () => void; onFull
 function CustomCountdownView({ 
   onBack, 
   onFullscreen,
-  customDuration 
+  customDuration, 
+  externalState,
 }: { 
   onBack: () => void; 
-  onFullscreen: (duration: number) => void;
+  onFullscreen: (p: { timeLeftSeconds: number; isRunning: boolean }) => void;
   customDuration: number;
+  externalState?: { timeLeftSeconds?: number; isRunning?: boolean } | null;
 }) {
   const { colors } = useTheme();
   const [timeLeft, setTimeLeft] = useState(customDuration * 60);
@@ -946,6 +963,17 @@ function CustomCountdownView({
       }
     };
   }, [isRunning, timeLeft]);
+
+  useEffect(() => {
+    if (externalState) {
+      if (typeof externalState.timeLeftSeconds === 'number') {
+        setTimeLeft(externalState.timeLeftSeconds);
+      }
+      if (typeof externalState.isRunning === 'boolean') {
+        setIsRunning(externalState.isRunning);
+      }
+    }
+  }, [externalState?.timeLeftSeconds, externalState?.isRunning]);
 
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -1042,7 +1070,7 @@ function CustomCountdownView({
         
         <TouchableOpacity 
           style={[styles.fullscreenButton, { flex: 1 }]}
-          onPress={() => onFullscreen(customDuration)}
+          onPress={() => onFullscreen({ timeLeftSeconds: timeLeft, isRunning })}
         >
           <Ionicons name="expand" size={18} color="white" />
           <Text style={styles.fullscreenButtonText}>Tam Ekran</Text>
@@ -1203,7 +1231,7 @@ function CustomCountdownSetup({
 }
 
 // AYT Deneme Geri Sayım Bileşeni
-function AYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFullscreen: () => void }) {
+function AYTPracticeView({ onBack, onFullscreen, externalState }: { onBack: () => void; onFullscreen: (p: { timeLeft: number; isRunning: boolean }) => void; externalState?: { timeLeft?: number; isRunning?: boolean } | null }) {
   const { colors } = useTheme();
   const [timeLeft, setTimeLeft] = useState(180 * 60); // 180 dakika = 10800 saniye
   const [isRunning, setIsRunning] = useState(false);
@@ -1288,6 +1316,17 @@ function AYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFulls
     };
   }, [isRunning, timeLeft]);
 
+  useEffect(() => {
+    if (externalState) {
+      if (typeof externalState.timeLeft === 'number') {
+        setTimeLeft(externalState.timeLeft);
+      }
+      if (typeof externalState.isRunning === 'boolean') {
+        setIsRunning(externalState.isRunning);
+      }
+    }
+  }, [externalState?.timeLeft, externalState?.isRunning]);
+
   const formatTime = (totalSeconds: number) => {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -1371,7 +1410,7 @@ function AYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFulls
         
         <TouchableOpacity 
           style={styles.fullscreenButton}
-          onPress={onFullscreen}
+          onPress={() => onFullscreen({ timeLeft, isRunning })}
         >
           <Ionicons name="expand" size={18} color="white" />
           <Text style={styles.fullscreenButtonText}>Tam Ekran</Text>
@@ -1382,7 +1421,7 @@ function AYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFulls
 }
 
 // TYT Deneme Geri Sayım Bileşeni
-function TYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFullscreen: () => void }) {
+function TYTPracticeView({ onBack, onFullscreen, externalState }: { onBack: () => void; onFullscreen: (p: { timeLeft: number; isRunning: boolean }) => void; externalState?: { timeLeft?: number; isRunning?: boolean } | null }) {
   const { colors } = useTheme();
   const [timeLeft, setTimeLeft] = useState(165 * 60); // 165 dakika = 9900 saniye
   const [isRunning, setIsRunning] = useState(false);
@@ -1467,6 +1506,17 @@ function TYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFulls
     };
   }, [isRunning, timeLeft]);
 
+  useEffect(() => {
+    if (externalState) {
+      if (typeof externalState.timeLeft === 'number') {
+        setTimeLeft(externalState.timeLeft);
+      }
+      if (typeof externalState.isRunning === 'boolean') {
+        setIsRunning(externalState.isRunning);
+      }
+    }
+  }, [externalState?.timeLeft, externalState?.isRunning]);
+
   const formatTime = (totalSeconds: number) => {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -1549,7 +1599,7 @@ function TYTPracticeView({ onBack, onFullscreen }: { onBack: () => void; onFulls
         
         <TouchableOpacity 
           style={styles.fullscreenButton}
-          onPress={onFullscreen}
+          onPress={() => onFullscreen({ timeLeft, isRunning })}
         >
           <Ionicons name="expand" size={18} color="white" />
           <Text style={styles.fullscreenButtonText}>Tam Ekran</Text>
@@ -1662,6 +1712,11 @@ export default function HomeScreen() {
   const [fullscreenCustomDuration, setFullscreenCustomDuration] = useState(0);
   const [activeCounter, setActiveCounter] = useState<string | null>(null);
   const [customDuration, setCustomDuration] = useState(0);
+  const [fullscreenPayload, setFullscreenPayload] = useState<any>(null);
+  const [lastStopwatchState, setLastStopwatchState] = useState<{ time?: number; isRunning?: boolean } | null>(null);
+  const [lastTYTPracticeState, setLastTYTPracticeState] = useState<{ timeLeft?: number; isRunning?: boolean } | null>(null);
+  const [lastAYTPracticeState, setLastAYTPracticeState] = useState<{ timeLeft?: number; isRunning?: boolean } | null>(null);
+  const [lastCustomCountdownState, setLastCustomCountdownState] = useState<{ timeLeftSeconds?: number; isRunning?: boolean } | null>(null);
 
   // İlham verici sözler dizisi
   const inspirationalQuotes = [
@@ -1693,51 +1748,55 @@ export default function HomeScreen() {
     if (hour >= 5 && hour < 12) {
       return { 
         message: 'Günaydın!', 
-        colors: ['#FFD700', '#FFA500'],
-        textColor: '#FF7F50'
+        colors: ['#FFE29F', '#FFA99F'],
+        textColor: '#1F2937'
       };
     } else if (hour >= 12 && hour < 18) {
       return { 
         message: 'İyi Günler!', 
-        colors: ['#87CEEB', '#4682B4'],
-        textColor: '#FF8C42'
+        colors: ['#A1C4FD', '#C2E9FB'],
+        textColor: '#111827'
       };
     } else if (hour >= 18 && hour < 22) {
       return { 
         message: 'İyi Akşamlar!', 
-        colors: ['#FF6347', '#FF4500'],
-        textColor: '#FF6B47'
+        colors: ['#1E3A8A', '#0F172A'],
+        textColor: '#FDE68A'
       };
     } else {
       return { 
         message: 'İyi Geceler!', 
-        colors: ['#4B0082', '#191970'],
-        textColor: '#9370DB'
+        colors: ['#0F172A', '#020617'],
+        textColor: '#93C5FD'
       };
     }
   };
 
   const greeting = getGreeting();
+  const isEveningGreeting = greeting.message === 'İyi Akşamlar!';
 
   if (showFullscreen) {
     return (
       <Modal visible={true} transparent={true} animationType="fade" statusBarTranslucent>
         <View style={styles.fullscreenOverlay}>
           {fullscreenType === 'stopwatch' ? (
-            <FullscreenStopwatchView onClose={() => {
+            <FullscreenStopwatchView onClose={(p) => {
+              setLastStopwatchState(p ?? null);
               setShowFullscreen(false);
               setFullscreenType(null);
-            }} />
+            }} initialTime={fullscreenPayload?.time} initialIsRunning={fullscreenPayload?.isRunning} />
           ) : fullscreenType === 'tyt-practice' ? (
-            <FullscreenTYTPracticeView onClose={() => {
+            <FullscreenTYTPracticeView onClose={(p) => {
+              setLastTYTPracticeState(p ?? null);
               setShowFullscreen(false);
               setFullscreenType(null);
-            }} />
+            }} initialTimeLeft={fullscreenPayload?.timeLeft} initialIsRunning={fullscreenPayload?.isRunning} />
           ) : fullscreenType === 'ayt-practice' ? (
-            <FullscreenAYTPracticeView onClose={() => {
+            <FullscreenAYTPracticeView onClose={(p) => {
+              setLastAYTPracticeState(p ?? null);
               setShowFullscreen(false);
               setFullscreenType(null);
-            }} />
+            }} initialTimeLeft={fullscreenPayload?.timeLeft} initialIsRunning={fullscreenPayload?.isRunning} />
           ) : fullscreenType === 'tyt-countdown' ? (
             <FullscreenTYTCountdownView onClose={() => {
               setShowFullscreen(false);
@@ -1750,11 +1809,14 @@ export default function HomeScreen() {
             }} />
           ) : fullscreenType === 'custom-countdown' ? (
             <FullscreenCustomCountdownView 
-              onClose={() => {
+              onClose={(p) => {
+                setLastCustomCountdownState(p ?? null);
                 setShowFullscreen(false);
                 setFullscreenType(null);
               }}
               duration={fullscreenCustomDuration}
+              initialTimeLeftSeconds={fullscreenPayload?.timeLeftSeconds}
+              initialIsRunning={fullscreenPayload?.isRunning}
             />
           ) : null}
         </View>
@@ -1785,12 +1847,28 @@ export default function HomeScreen() {
             colors={greeting.colors as any}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.greetingCard}
+            style={[styles.greetingCard, isEveningGreeting && styles.eveningCard]}
           >
+            {isEveningGreeting && (
+              <>
+                <View style={styles.eveningMoonGlow} />
+                <Ionicons name="moon" size={44} color="#FFD27D" style={styles.eveningMoon} />
+                <View style={styles.eveningStarsLayer}>
+                  <View style={[styles.eveningStar, { top: 8, left: '12%', opacity: 0.9 }]} />
+                  <View style={[styles.eveningStar, { top: 22, right: '18%', opacity: 0.7 }]} />
+                  <View style={[styles.eveningStar, { top: 36, left: '60%', opacity: 0.8 }]} />
+                  <View style={[styles.eveningStar, { top: 54, left: '30%', opacity: 0.6 }]} />
+                  <View style={[styles.eveningStar, { top: 70, right: '8%', opacity: 0.85 }]} />
+                </View>
+              </>
+            )}
             <Text style={[styles.greetingTitle, { color: greeting.textColor }]}>{greeting.message}</Text>
+            {isEveningGreeting && (
+              <Text style={styles.eveningSubtitle}>Günün yorgunluğunu bırak, hedeflerine bir adım daha yaklaş.</Text>
+            )}
             <View style={styles.divider} />
-            <Text style={styles.quoteText}>"{dailyQuote.quote}"</Text>
-            <Text style={styles.authorText}>— {dailyQuote.author}</Text>
+            <Text style={[styles.quoteText, { color: greeting.textColor, opacity: 0.85 }]}>"{dailyQuote.quote}"</Text>
+            <Text style={[styles.authorText, { color: greeting.textColor, opacity: 0.8 }]}>— {dailyQuote.author}</Text>
           </LinearGradient>
         </View>
 
@@ -1871,10 +1949,12 @@ export default function HomeScreen() {
             /* Kronometre Gösterimi */
             <StopwatchView 
               onBack={() => setActiveCounter(null)} 
-              onFullscreen={() => {
+              onFullscreen={(p) => {
                 setFullscreenType('stopwatch');
+                setFullscreenPayload(p);
                 setShowFullscreen(true);
               }}
+              externalState={lastStopwatchState}
             />
           ) : activeCounter === 'tyt-countdown' ? (
             /* TYT Geri Sayım Gösterimi */
@@ -1898,19 +1978,23 @@ export default function HomeScreen() {
             /* TYT Deneme Gösterimi */
             <TYTPracticeView 
               onBack={() => setActiveCounter(null)}
-              onFullscreen={() => {
+              onFullscreen={(p) => {
                 setFullscreenType('tyt-practice');
+                setFullscreenPayload(p);
                 setShowFullscreen(true);
               }}
+              externalState={lastTYTPracticeState}
             />
           ) : activeCounter === 'ayt-practice' ? (
             /* AYT Deneme Gösterimi */
             <AYTPracticeView 
               onBack={() => setActiveCounter(null)}
-              onFullscreen={() => {
+              onFullscreen={(p) => {
                 setFullscreenType('ayt-practice');
+                setFullscreenPayload(p);
                 setShowFullscreen(true);
               }}
+              externalState={lastAYTPracticeState}
             />
           ) : activeCounter === 'custom-countdown' ? (
             /* Özel Geri Sayım Gösterimi */
@@ -1920,12 +2004,14 @@ export default function HomeScreen() {
                   setCustomDuration(0);
                   setActiveCounter(null);
                 }}
-                onFullscreen={(dur) => {
-                  setFullscreenCustomDuration(dur);
+                onFullscreen={(p) => {
+                  setFullscreenCustomDuration(Math.max(1, Math.ceil((p.timeLeftSeconds ?? 60) / 60)));
+                  setFullscreenPayload(p);
                   setFullscreenType('custom-countdown');
                   setShowFullscreen(true);
                 }}
                 customDuration={customDuration}
+                externalState={lastCustomCountdownState}
               />
             ) : (
               <CustomCountdownSetup 
@@ -1984,9 +2070,52 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 10,
   },
+  eveningCard: {
+    overflow: 'hidden',
+  },
+  eveningMoon: {
+    position: 'absolute',
+    top: 12,
+    right: 16,
+    textShadowColor: 'rgba(255, 210, 125, 0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+    zIndex: 2,
+  },
+  eveningMoonGlow: {
+    position: 'absolute',
+    top: -30,
+    right: -10,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255, 210, 125, 0.15)',
+    zIndex: 1,
+  },
+  eveningStarsLayer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+  },
+  eveningStar: {
+    position: 'absolute',
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#FFFFFF',
+  },
+  eveningSubtitle: {
+    fontSize: 14,
+    color: '#FCE7B2',
+    marginTop: 6,
+    opacity: 0.95,
+    textAlign: 'center',
+  },
   greetingTitle: {
-    fontSize: 36,
-    fontWeight: '800',
+    fontSize: 20,
+    fontWeight: '400',
     marginBottom: 15,
     textAlign: 'center',
     letterSpacing: 2,

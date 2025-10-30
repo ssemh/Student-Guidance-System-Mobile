@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNavigation } from '@react-navigation/native';
 
 
 interface Note {
@@ -34,6 +35,7 @@ interface Note {
 
 export default function BoardScreen() {
   const { colors: themeColors } = useTheme();
+  const navigation = useNavigation();
   const [notes, setNotes] = useState<Note[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -438,6 +440,14 @@ export default function BoardScreen() {
               )}
             </View>
           </View>
+          {/* Pano altına yerleştirilen geri dön butonu */}
+          <TouchableOpacity 
+            style={styles.backHomeBottomButton}
+            onPress={() => navigation.navigate('Main' as never, { screen: 'Ana Sayfa' } as never)}
+          >
+            <Ionicons name="home" size={18} color="white" />
+            <Text style={styles.backHomeBottomText}>Ana Sayfaya Dön</Text>
+          </TouchableOpacity>
         </ScrollView>
       </View>
 
@@ -764,6 +774,23 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
     paddingHorizontal: 20,
     alignItems: 'center',
+  },
+  backHomeBottomButton: {
+    alignSelf: 'center',
+    marginTop: 16,
+    backgroundColor: '#3b82f6',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+  },
+  backHomeBottomText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
   },
   headerTitle: {
     fontSize: 28,
