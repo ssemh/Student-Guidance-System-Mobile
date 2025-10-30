@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../contexts/ThemeContext';
 
 
 interface Message {
@@ -22,6 +23,7 @@ interface Message {
 }
 
 export default function ChatScreen() {
+  const { colors } = useTheme();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -105,7 +107,7 @@ export default function ChatScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
         colors={['#3b82f6', '#1e40af', '#7c3aed']}
         start={{ x: 0, y: 0 }}
@@ -129,7 +131,7 @@ export default function ChatScreen() {
       >
         <ScrollView
           ref={scrollViewRef}
-          style={styles.messagesContainer}
+          style={[styles.messagesContainer, { backgroundColor: colors.background }]}
           showsVerticalScrollIndicator={false}
         >
           {messages.map((message) => (
@@ -143,13 +145,13 @@ export default function ChatScreen() {
               <View
                 style={[
                   styles.messageBubble,
-                  message.isUser ? styles.userBubble : styles.aiBubble,
+                  message.isUser ? styles.userBubble : [styles.aiBubble, { backgroundColor: colors.surface, borderColor: colors.border }],
                 ]}
               >
                 <Text
                   style={[
                     styles.messageText,
-                    message.isUser ? styles.userText : styles.aiText,
+                    message.isUser ? styles.userText : [styles.aiText, { color: colors.text }],
                   ]}
                 >
                   {message.text}
@@ -157,7 +159,7 @@ export default function ChatScreen() {
                 <Text
                   style={[
                     styles.messageTime,
-                    message.isUser ? styles.userTime : styles.aiTime,
+                    message.isUser ? styles.userTime : [styles.aiTime, { color: colors.textSecondary }],
                   ]}
                 >
                   {formatTime(message.timestamp)}
@@ -168,24 +170,25 @@ export default function ChatScreen() {
         </ScrollView>
 
         <View style={styles.quickQuestionsContainer}>
-          <Text style={styles.quickQuestionsTitle}>Hızlı Sorular</Text>
+          <Text style={[styles.quickQuestionsTitle, { color: colors.text }]}>Hızlı Sorular</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {quickQuestions.map((question, index) => (
               <TouchableOpacity
                 key={index}
-                style={styles.quickQuestionButton}
+                style={[styles.quickQuestionButton, { backgroundColor: colors.card, borderColor: colors.border }]}
                 onPress={() => handleQuickQuestion(question)}
               >
-                <Text style={styles.quickQuestionText}>{question}</Text>
+                <Text style={[styles.quickQuestionText, { color: colors.primary }]}>{question}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
 
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { backgroundColor: colors.card, borderTopColor: colors.border }] }>
           <TextInput
-            style={styles.textInput}
+            style={[styles.textInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
             placeholder="Mesajınızı yazın..."
+            placeholderTextColor={colors.textSecondary}
             value={inputText}
             onChangeText={setInputText}
             multiline
@@ -194,7 +197,7 @@ export default function ChatScreen() {
           <TouchableOpacity
             style={[
               styles.sendButton,
-              !inputText.trim() && styles.sendButtonDisabled,
+              { backgroundColor: inputText.trim() ? colors.primary : colors.border },
             ]}
             onPress={sendMessage}
             disabled={!inputText.trim()}
@@ -202,7 +205,7 @@ export default function ChatScreen() {
             <Ionicons
               name="send"
               size={20}
-              color={inputText.trim() ? 'white' : '#9ca3af'}
+              color={inputText.trim() ? 'white' : colors.textSecondary}
             />
           </TouchableOpacity>
         </View>
@@ -276,14 +279,8 @@ const styles = StyleSheet.create({
   aiBubble: {
     backgroundColor: 'white',
     borderBottomLeftRadius: 4,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   messageText: {
     fontSize: 16,
