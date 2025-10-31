@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../contexts/ToastContext';
 import { useNavigation } from '@react-navigation/native';
 
 
@@ -35,6 +36,7 @@ interface Note {
 
 export default function BoardScreen() {
   const { colors: themeColors } = useTheme();
+  const { showToast } = useToast();
   const navigation = useNavigation();
   const [notes, setNotes] = useState<Note[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -138,7 +140,7 @@ export default function BoardScreen() {
 
   const addNote = () => {
     if (!noteTitle.trim() || !noteContent.trim()) {
-      Alert.alert('Hata', 'Lütfen başlık ve içerik girin');
+      showToast('Lütfen başlık ve içerik girin', 'error', 'Hata');
       return;
     }
 
@@ -231,7 +233,7 @@ export default function BoardScreen() {
       // İzin iste
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Hata', 'Galeri erişim izni gerekli');
+        showToast('Galeri erişim izni gerekli', 'error', 'Hata');
         return;
       }
 
@@ -248,7 +250,7 @@ export default function BoardScreen() {
       }
     } catch (error) {
       console.log('Resim seçilirken hata:', error);
-      Alert.alert('Hata', 'Resim seçilemedi');
+      showToast('Resim seçilemedi', 'error', 'Hata');
     }
   };
 

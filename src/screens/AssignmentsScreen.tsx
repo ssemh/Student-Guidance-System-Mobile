@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useToast } from '../contexts/ToastContext';
 
 interface Assignment {
   id: string;
@@ -24,6 +25,7 @@ interface Assignment {
 }
 
 export default function AssignmentsScreen() {
+  const { showToast } = useToast();
   const [assignments, setAssignments] = useState<Assignment[]>([
     {
       id: '1',
@@ -150,7 +152,7 @@ export default function AssignmentsScreen() {
   };
 
   const createProgram = () => {
-    Alert.alert('Program Oluşturuldu', `Program başarıyla oluşturuldu!\n\nGünlük Saat Aralığı: ${dailyTimeRange}\nDers Süresi: ${lessonDuration} dakika\nTenefüs Süresi: ${breakDuration} dakika\nGün Sayısı: ${dayCount}`);
+    showToast(`Günlük Saat Aralığı: ${dailyTimeRange}\nDers Süresi: ${lessonDuration} dakika\nTenefüs Süresi: ${breakDuration} dakika\nGün Sayısı: ${dayCount}`, 'success', 'Program Oluşturuldu');
     setShowAddModal(false);
   };
 

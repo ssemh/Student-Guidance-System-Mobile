@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useToast } from '../contexts/ToastContext';
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
@@ -24,20 +25,22 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigation = useNavigation();
+  const { showToast } = useToast();
 
   const handleRegister = () => {
     if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      showToast('Lütfen tüm alanları doldurun', 'error', 'Hata');
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Hata', 'Şifreler eşleşmiyor');
+      showToast('Şifreler eşleşmiyor', 'error', 'Hata');
       return;
     }
     // Burada kayıt işlemi yapılacak
-    Alert.alert('Başarılı', 'Hesabınız oluşturuldu!', [
-      { text: 'Tamam', onPress: () => navigation.navigate('Login') }
-    ]);
+    showToast('Hesabınız oluşturuldu!', 'success', 'Başarılı', 2000);
+    setTimeout(() => {
+      navigation.navigate('Login' as never);
+    }, 2000);
   };
 
   return (

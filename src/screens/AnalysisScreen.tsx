@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../contexts/ToastContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -32,6 +33,7 @@ interface AnalysisResult {
 
 export default function AnalysisScreen() {
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const [analysisType, setAnalysisType] = useState<'konu' | 'deneme'>('konu');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('');
@@ -512,17 +514,17 @@ export default function AnalysisScreen() {
 
   const handleAnalyze = () => {
     if (!totalQuestions || !correctAnswers || !wrongAnswers) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      showToast('Lütfen tüm alanları doldurun', 'error', 'Hata');
       return;
     }
     
     if (analysisType === 'konu' && !selectedSubject) {
-      Alert.alert('Hata', 'Lütfen bir ders seçin');
+      showToast('Lütfen bir ders seçin', 'error', 'Hata');
       return;
     }
     
     if (analysisType === 'konu' && !selectedTopic) {
-      Alert.alert('Hata', 'Lütfen bir konu seçin');
+      showToast('Lütfen bir konu seçin', 'error', 'Hata');
       return;
     }
     
@@ -568,7 +570,7 @@ export default function AnalysisScreen() {
     setSelectedTopic(''); // Konu seçimini temizle
     setExamName(''); // Deneme adını temizle
     
-    Alert.alert('Başarılı', 'Analiz sonucu kaydedildi!');
+    showToast('Analiz sonucu kaydedildi!', 'success', 'Başarılı');
   };
 
   const handleDelete = async (id: string) => {
@@ -676,65 +678,89 @@ export default function AnalysisScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Analiz Türü Seçimi */}
         <View style={styles.analysisTypeSelector}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Analiz Türü</Text>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="analytics" size={24} color="#3b82f6" />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Analiz Türü</Text>
+          </View>
           <View style={styles.typeButtons}>
             <TouchableOpacity
-              style={[
-                styles.typeButton,
-                analysisType === 'konu' && styles.selectedTypeButton,
-              ]}
+              style={styles.typeButtonContainer}
               onPress={() => {
                 setAnalysisType('konu');
                 setIsAnalyzed(false);
                 setSelectedSubject('');
                 setSelectedTopic('');
-                setFilterSubject(''); // Filtreyi temizle
+                setFilterSubject('');
               }}
+              activeOpacity={0.9}
             >
-              <Ionicons 
-                name="book" 
-                size={20} 
-                color={analysisType === 'konu' ? 'white' : '#d97706'} 
-              />
-              <Text style={[
-                styles.typeButtonText,
-                analysisType === 'konu' && styles.selectedTypeButtonText,
-              ]}>
-                Konu Analizi
-              </Text>
+              {analysisType === 'konu' ? (
+                <LinearGradient
+                  colors={['#3b82f6', '#2563eb', '#1d4ed8']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[styles.typeButtonCard, { borderWidth: 0 }]}
+                >
+                  <View style={styles.typeButtonIconContainer}>
+                    <Ionicons name="book" size={18} color="white" />
+                  </View>
+                  <Text style={styles.selectedTypeButtonTitle}>Konu Analizi</Text>
+                  <Text style={styles.selectedTypeButtonSubtitle}>Konu bazlı analiz</Text>
+                </LinearGradient>
+              ) : (
+                <View style={[styles.typeButtonCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <View style={[styles.typeButtonIconContainer, { backgroundColor: colors.surface }]}>
+                    <Ionicons name="book" size={18} color="#3b82f6" />
+                  </View>
+                  <Text style={[styles.typeButtonTitle, { color: colors.text }]}>Konu Analizi</Text>
+                  <Text style={[styles.typeButtonSubtitle, { color: colors.textSecondary }]}>Konu bazlı analiz</Text>
+                </View>
+              )}
             </TouchableOpacity>
             
             <TouchableOpacity
-              style={[
-                styles.typeButton,
-                analysisType === 'deneme' && styles.selectedTypeButton,
-              ]}
+              style={styles.typeButtonContainer}
               onPress={() => {
                 setAnalysisType('deneme');
                 setIsAnalyzed(false);
                 setSelectedSubject('');
                 setSelectedTopic('');
-                setFilterSubject(''); // Filtreyi temizle
+                setFilterSubject('');
               }}
+              activeOpacity={0.9}
             >
-              <Ionicons 
-                name="document-text" 
-                size={20} 
-                color={analysisType === 'deneme' ? 'white' : '#d97706'} 
-              />
-              <Text style={[
-                styles.typeButtonText,
-                analysisType === 'deneme' && styles.selectedTypeButtonText,
-              ]}>
-                Deneme Analizi
-              </Text>
+              {analysisType === 'deneme' ? (
+                <LinearGradient
+                  colors={['#8b5cf6', '#7c3aed', '#6d28d9']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[styles.typeButtonCard, { borderWidth: 0 }]}
+                >
+                  <View style={styles.typeButtonIconContainer}>
+                    <Ionicons name="document-text" size={18} color="white" />
+                  </View>
+                  <Text style={styles.selectedTypeButtonTitle}>Deneme Analizi</Text>
+                  <Text style={styles.selectedTypeButtonSubtitle}>Sınav sonuç analizi</Text>
+                </LinearGradient>
+              ) : (
+                <View style={[styles.typeButtonCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <View style={[styles.typeButtonIconContainer, { backgroundColor: colors.surface }]}>
+                    <Ionicons name="document-text" size={18} color="#8b5cf6" />
+                  </View>
+                  <Text style={[styles.typeButtonTitle, { color: colors.text }]}>Deneme Analizi</Text>
+                  <Text style={[styles.typeButtonSubtitle, { color: colors.textSecondary }]}>Sınav sonuç analizi</Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Ders Seçimi - Modal */}
         <View style={styles.dropdownSection}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Ders Seç</Text>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="school" size={24} color="#3b82f6" />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Ders Seç</Text>
+          </View>
           <TouchableOpacity
             style={[styles.dropdownButton, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={() => {
@@ -742,6 +768,7 @@ export default function AnalysisScreen() {
               setShowTopicDropdown(false);
             }}
           >
+            <Ionicons name="book-outline" size={20} color={selectedSubject ? '#3b82f6' : colors.textSecondary} />
             <Text style={[
               styles.dropdownButtonText,
               { color: colors.text },
@@ -803,7 +830,10 @@ export default function AnalysisScreen() {
         {/* Konu Seçimi - Modal (Sadece Konu Analizi için) */}
         {analysisType === 'konu' && (
           <View style={styles.dropdownSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Konu Seç</Text>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="list" size={24} color="#3b82f6" />
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Konu Seç</Text>
+            </View>
             <TouchableOpacity
               style={[styles.dropdownButton, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => {
@@ -813,6 +843,7 @@ export default function AnalysisScreen() {
                 }
               }}
             >
+              <Ionicons name="layers-outline" size={20} color={selectedTopic ? '#3b82f6' : colors.textSecondary} />
               <Text style={[
                 styles.dropdownButtonText,
                 { color: colors.text },
@@ -874,22 +905,29 @@ export default function AnalysisScreen() {
         {/* Deneme Adı Girişi (Sadece Deneme Analizi için) */}
         {analysisType === 'deneme' && (
           <View style={styles.inputSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Deneme Adı</Text>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="document-text" size={24} color="#3b82f6" />
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Deneme Adı</Text>
+            </View>
             
             {/* Manuel Giriş - Üstte */}
-            <TextInput
-              style={[styles.examNameInput, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
-              placeholder="Yeni deneme adı girin"
-              placeholderTextColor={colors.textSecondary}
-              value={examName}
-              onChangeText={setExamName}
-            />
+            <View style={styles.inputWrapper}>
+              <Ionicons name="create-outline" size={20} color="#3b82f6" style={styles.inputIcon} />
+              <TextInput
+                style={[styles.examNameInput, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+                placeholder="Yeni deneme adı girin"
+                placeholderTextColor={colors.textSecondary}
+                value={examName}
+                onChangeText={setExamName}
+              />
+            </View>
             
             {/* Kaydedilen Deneme Adları - Altta */}
             <TouchableOpacity
               style={[styles.examNameSelectButton, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => setShowExamNameDropdown(true)}
             >
+              <Ionicons name="folder-outline" size={20} color={colors.textSecondary} />
               <Text style={[
                 examName && examNames.includes(examName) ? styles.examNameSelectedText : styles.examNamePlaceholderText,
                 { color: colors.text }
@@ -961,51 +999,69 @@ export default function AnalysisScreen() {
 
         {/* Sonuç Girişi */}
         <View style={styles.inputSection}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Sonuçlarını Gir</Text>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="calculator" size={24} color="#3b82f6" />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Sonuçlarını Gir</Text>
+          </View>
           
           <View style={styles.inputContainer}>
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Toplam Soru Sayısı</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
-              placeholder="Toplam soru sayısını giriniz"
-              placeholderTextColor={colors.textSecondary}
-              value={totalQuestions}
-              onChangeText={(text) => {
-                setTotalQuestions(text);
-                setIsAnalyzed(false);
-              }}
-              keyboardType="numeric"
-            />
+            <View style={styles.inputLabelContainer}>
+              <Ionicons name="help-circle-outline" size={18} color="#6b7280" />
+              <Text style={[styles.inputLabel, { color: colors.text }]}>Toplam Soru Sayısı</Text>
+            </View>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+                placeholder="Toplam soru sayısını giriniz"
+                placeholderTextColor={colors.textSecondary}
+                value={totalQuestions}
+                onChangeText={(text) => {
+                  setTotalQuestions(text);
+                  setIsAnalyzed(false);
+                }}
+                keyboardType="numeric"
+              />
+            </View>
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Doğru Sayısı</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
-              placeholder="Doğru sayısını giriniz"
-              placeholderTextColor={colors.textSecondary}
-              value={correctAnswers}
-              onChangeText={(text) => {
-                setCorrectAnswers(text);
-                setIsAnalyzed(false);
-              }}
-              keyboardType="numeric"
-            />
+            <View style={styles.inputLabelContainer}>
+              <Ionicons name="checkmark-circle-outline" size={18} color="#10b981" />
+              <Text style={[styles.inputLabel, { color: colors.text }]}>Doğru Sayısı</Text>
+            </View>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+                placeholder="Doğru sayısını giriniz"
+                placeholderTextColor={colors.textSecondary}
+                value={correctAnswers}
+                onChangeText={(text) => {
+                  setCorrectAnswers(text);
+                  setIsAnalyzed(false);
+                }}
+                keyboardType="numeric"
+              />
+            </View>
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Yanlış Sayısı</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
-              placeholder="Yanlış sayısını giriniz"
-              placeholderTextColor={colors.textSecondary}
-              value={wrongAnswers}
-              onChangeText={(text) => {
-                setWrongAnswers(text);
-                setIsAnalyzed(false);
-              }}
-              keyboardType="numeric"
-            />
+            <View style={styles.inputLabelContainer}>
+              <Ionicons name="close-circle-outline" size={18} color="#ef4444" />
+              <Text style={[styles.inputLabel, { color: colors.text }]}>Yanlış Sayısı</Text>
+            </View>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+                placeholder="Yanlış sayısını giriniz"
+                placeholderTextColor={colors.textSecondary}
+                value={wrongAnswers}
+                onChangeText={(text) => {
+                  setWrongAnswers(text);
+                  setIsAnalyzed(false);
+                }}
+                keyboardType="numeric"
+              />
+            </View>
           </View>
         </View>
 
@@ -1014,67 +1070,122 @@ export default function AnalysisScreen() {
           style={styles.analyzeButton}
           onPress={handleAnalyze}
           disabled={!totalQuestions || !correctAnswers || !wrongAnswers || (analysisType === 'konu' && (!selectedSubject || !selectedTopic))}
+          activeOpacity={0.8}
         >
-          <Ionicons name="analytics" size={20} color="white" />
-          <Text style={styles.analyzeButtonText}>Analiz Et</Text>
+          <LinearGradient
+            colors={['#10b981', '#059669']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.analyzeButtonGradient}
+          >
+            <Ionicons name="analytics" size={22} color="white" />
+            <Text style={styles.analyzeButtonText}>Analiz Et</Text>
+          </LinearGradient>
         </TouchableOpacity>
 
         {/* Analiz Sonucu */}
         {isAnalyzed && (
           <View style={styles.resultSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Analiz Sonucu</Text>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="trophy" size={24} color="#f59e0b" />
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Analiz Sonucu</Text>
+            </View>
             
-            <View style={styles.scoreCard}>
+            <LinearGradient
+              colors={['#ffffff', '#f9fafb']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.scoreCard}
+            >
+              <View style={styles.scoreIconContainer}>
+                <Ionicons name="stats-chart" size={32} color={getScoreColor(score)} />
+              </View>
               <Text style={styles.scoreLabel}>Başarı Oranı</Text>
               <Text style={[styles.scoreValue, { color: getScoreColor(score) }]}>
                 %{score}
               </Text>
               <View style={styles.scoreBar}>
-                <View
-                  style={[
-                    styles.scoreBarFill,
-                    { width: `${score}%`, backgroundColor: getScoreColor(score) },
-                  ]}
+                <LinearGradient
+                  colors={score >= 80 ? ['#10b981', '#059669'] : score >= 60 ? ['#f59e0b', '#d97706'] : ['#ef4444', '#dc2626']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.scoreBarFill, { width: `${score}%` }]}
                 />
               </View>
-            </View>
+            </LinearGradient>
 
-            <View style={styles.netCard}>
+            <LinearGradient
+              colors={['#ffffff', '#f9fafb']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.netCard}
+            >
+              <View style={styles.netIconContainer}>
+                <Ionicons name="calculator" size={32} color={getScoreColor(score)} />
+              </View>
               <Text style={styles.netLabel}>Net Sayısı</Text>
               <Text style={[styles.netValue, { color: getScoreColor(score) }]}>
-                {calculateNet()}
+                {calculateNet().toFixed(2)}
               </Text>
               <Text style={styles.netDescription}>
                 4 yanlış = 1 doğru götürür
               </Text>
-            </View>
+            </LinearGradient>
 
             <View style={styles.statsGrid}>
-              <View style={styles.statCard}>
-                <Ionicons name="checkmark-circle" size={24} color="#10b981" />
+              <LinearGradient
+                colors={['#ffffff', '#f0fdf4']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.statCard}
+              >
+                <View style={[styles.statIconContainer, { backgroundColor: '#d1fae5' }]}>
+                  <Ionicons name="checkmark-circle" size={28} color="#10b981" />
+                </View>
                 <Text style={styles.statNumber}>{correctAnswers || 0}</Text>
                 <Text style={styles.statLabel}>Doğru</Text>
-              </View>
+              </LinearGradient>
               
-              <View style={styles.statCard}>
-                <Ionicons name="close-circle" size={24} color="#ef4444" />
+              <LinearGradient
+                colors={['#ffffff', '#fef2f2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.statCard}
+              >
+                <View style={[styles.statIconContainer, { backgroundColor: '#fee2e2' }]}>
+                  <Ionicons name="close-circle" size={28} color="#ef4444" />
+                </View>
                 <Text style={styles.statNumber}>{wrongAnswers || 0}</Text>
                 <Text style={styles.statLabel}>Yanlış</Text>
-              </View>
+              </LinearGradient>
               
-              <View style={styles.statCard}>
-                <Ionicons name="help-circle" size={24} color="#6b7280" />
+              <LinearGradient
+                colors={['#ffffff', '#f9fafb']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.statCard}
+              >
+                <View style={[styles.statIconContainer, { backgroundColor: '#f3f4f6' }]}>
+                  <Ionicons name="help-circle" size={28} color="#6b7280" />
+                </View>
                 <Text style={styles.statNumber}>
                   {(parseInt(totalQuestions) || 0) - (parseInt(correctAnswers) || 0) - (parseInt(wrongAnswers) || 0)}
                 </Text>
                 <Text style={styles.statLabel}>Boş</Text>
-              </View>
+              </LinearGradient>
             </View>
 
             {/* Kaydet Butonu */}
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Ionicons name="save" size={20} color="white" />
-              <Text style={styles.saveButtonText}>Kaydet</Text>
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave} activeOpacity={0.8}>
+              <LinearGradient
+                colors={['#6366f1', '#8b5cf6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.saveButtonGradient}
+              >
+                <Ionicons name="save" size={22} color="white" />
+                <Text style={styles.saveButtonText}>Kaydet</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         )}
@@ -1083,7 +1194,10 @@ export default function AnalysisScreen() {
         {/* Geçmiş Sonuçlar */}
         {savedResults.length > 0 && (
           <View style={styles.historySection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Geçmiş Sonuçlar</Text>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="time" size={24} color="#3b82f6" />
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Geçmiş Sonuçlar</Text>
+            </View>
             
             {/* Ders Filtresi */}
             <View style={styles.filterSection}>
@@ -1154,34 +1268,60 @@ export default function AnalysisScreen() {
             </Modal>
             
             {filteredResults.map((result) => (
-              <View key={result.id} style={styles.historyCard}>
+              <LinearGradient
+                key={result.id}
+                colors={['#ffffff', '#f9fafb']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.historyCard}
+              >
                 <View style={styles.historyHeader}>
                   <View style={styles.historyInfo}>
-                    <Text style={styles.historyType}>
-                      {result.type === 'konu' ? '📚 Konu Analizi' : '📝 Deneme Analizi'}
-                    </Text>
+                    <View style={styles.historyTypeContainer}>
+                      <Ionicons 
+                        name={result.type === 'konu' ? 'book' : 'document-text'} 
+                        size={20} 
+                        color="#6366f1" 
+                      />
+                      <Text style={styles.historyType}>
+                        {result.type === 'konu' ? 'Konu Analizi' : 'Deneme Analizi'}
+                      </Text>
+                    </View>
                     <Text style={styles.historySubject}>
                       {result.subject}
                       {result.topic && ` - ${result.topic}`}
                       {result.examName && ` (${result.examName})`}
                     </Text>
-                    <Text style={styles.historyDate}>{result.date}</Text>
+                    <View style={styles.historyDateContainer}>
+                      <Ionicons name="calendar-outline" size={14} color="#6b7280" />
+                      <Text style={styles.historyDate}>{result.date}</Text>
+                    </View>
                   </View>
                   
-                  <View style={styles.historyScore}>
-                    <Text style={[styles.historyScoreText, { color: getScoreColor(result.score) }]}>
-                      %{result.score}
-                    </Text>
+                  <LinearGradient
+                    colors={result.score >= 80 ? ['#10b981', '#059669'] : result.score >= 60 ? ['#f59e0b', '#d97706'] : ['#ef4444', '#dc2626']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.historyScoreBadge}
+                  >
+                    <Text style={styles.historyScoreText}>%{result.score}</Text>
                     <Text style={styles.historyScoreLabel}>Başarı</Text>
-                  </View>
+                  </LinearGradient>
                 </View>
                 
                 <View style={styles.historyStats}>
-                  <Text style={styles.historyStat}>
-                    Doğru: {result.correctAnswers} | 
-                    Yanlış: {result.wrongAnswers} | 
-                    Toplam: {result.totalQuestions}
-                  </Text>
+                  <View style={styles.historyStatItem}>
+                    <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+                    <Text style={styles.historyStat}>Doğru: {result.correctAnswers}</Text>
+                  </View>
+                  <View style={styles.historyStatItem}>
+                    <Ionicons name="close-circle" size={16} color="#ef4444" />
+                    <Text style={styles.historyStat}>Yanlış: {result.wrongAnswers}</Text>
+                  </View>
+                  <View style={styles.historyStatItem}>
+                    <Ionicons name="help-circle" size={16} color="#6b7280" />
+                    <Text style={styles.historyStat}>Toplam: {result.totalQuestions}</Text>
+                  </View>
                 </View>
                 
                 <TouchableOpacity
@@ -1189,10 +1329,10 @@ export default function AnalysisScreen() {
                   onPress={() => handleDelete(result.id)}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="trash" size={16} color="white" />
+                  <Ionicons name="trash" size={18} color="white" />
                   <Text style={styles.deleteButtonText}>Sil</Text>
                 </TouchableOpacity>
-              </View>
+              </LinearGradient>
             ))}
           </View>
         )}
@@ -1231,43 +1371,76 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    gap: 10,
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom: 15,
   },
   analysisTypeSelector: {
     marginBottom: 25,
   },
   typeButtons: {
     flexDirection: 'row',
-    gap: 15,
+    gap: 10,
   },
-  typeButton: {
+  typeButtonContainer: {
     flex: 1,
-    flexDirection: 'row',
+    maxWidth: '48%',
+  },
+  typeButtonCard: {
+    borderRadius: 14,
+    padding: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    backgroundColor: '#fef3c7',
+    minHeight: 85,
+    shadowColor: '#3b82f6',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
     borderWidth: 2,
-    borderColor: '#fbbf24',
   },
-  selectedTypeButton: {
-    backgroundColor: '#f59e0b',
-    borderColor: '#f59e0b',
+  typeButtonIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
   },
-  typeButtonText: {
-    marginLeft: 8,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#d97706',
-  },
-  selectedTypeButtonText: {
+  selectedTypeButtonTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
     color: 'white',
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  selectedTypeButtonSubtitle: {
+    fontSize: 9,
+    color: 'rgba(255, 255, 255, 0.85)',
+    textAlign: 'center',
+    lineHeight: 11,
+  },
+  typeButtonTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  typeButtonSubtitle: {
+    fontSize: 9,
+    textAlign: 'center',
+    lineHeight: 11,
   },
   dropdownSection: {
     marginBottom: 25,
@@ -1285,6 +1458,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 15,
     minHeight: 50,
+    gap: 10,
   },
   dropdownButtonText: {
     fontSize: 16,
@@ -1331,11 +1505,25 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 15,
   },
+  inputLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
   inputLabel: {
     fontSize: 16,
     fontWeight: '500',
     color: '#374151',
-    marginBottom: 8,
+  },
+  inputWrapper: {
+    position: 'relative',
+  },
+  inputIcon: {
+    position: 'absolute',
+    left: 15,
+    top: 14,
+    zIndex: 1,
   },
   input: {
     borderWidth: 1,
@@ -1348,13 +1536,24 @@ const styles = StyleSheet.create({
     color: '#374151',
   },
   analyzeButton: {
+    borderRadius: 12,
+    marginBottom: 25,
+    overflow: 'hidden',
+    shadowColor: '#10b981',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  analyzeButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#10b981',
     paddingVertical: 15,
-    borderRadius: 12,
-    marginBottom: 25,
+    gap: 8,
   },
   disabledButton: {
     backgroundColor: '#9ca3af',
@@ -1363,40 +1562,55 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: '600',
-    marginLeft: 8,
   },
   resultSection: {
     marginBottom: 25,
   },
   scoreCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 20,
+    padding: 25,
     alignItems: 'center',
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  scoreIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#f3f4f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   netCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 20,
+    padding: 25,
     alignItems: 'center',
     marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  netIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#f3f4f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   netLabel: {
     fontSize: 16,
@@ -1442,7 +1656,6 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
@@ -1456,6 +1669,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
+  statIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -1468,35 +1689,64 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
   saveButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#6366f1',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  saveButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6366f1',
     paddingVertical: 15,
-    borderRadius: 12,
+    gap: 8,
   },
   saveButtonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: '600',
-    marginLeft: 8,
   },
   historySection: {
     marginBottom: 25,
   },
   historyCard: {
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 20,
     marginBottom: 15,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  historyTypeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 5,
+  },
+  historyDateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  historyScoreBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
   },
   historyHeader: {
     flexDirection: 'row',
@@ -1523,23 +1773,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7280',
   },
-  historyScore: {
-    alignItems: 'center',
-  },
   historyScoreText: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
+    color: 'white',
   },
   historyScoreLabel: {
-    fontSize: 12,
-    color: '#6b7280',
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginTop: 2,
   },
   historyStats: {
     marginBottom: 15,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  historyStatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+    minWidth: '30%',
   },
   historyStat: {
     fontSize: 14,
     color: '#6b7280',
+    fontWeight: '500',
   },
   deleteButton: {
     flexDirection: 'row',
@@ -1707,6 +1967,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 12,
     marginBottom: 10,
+    gap: 10,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -1726,11 +1987,10 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
   },
   examNameInput: {
-    backgroundColor: 'white',
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 12,
-    paddingHorizontal: 15,
+    paddingHorizontal: 45,
     paddingVertical: 12,
     fontSize: 16,
     color: '#374151',

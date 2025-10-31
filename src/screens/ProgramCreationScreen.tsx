@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../contexts/ToastContext';
 
 interface ProgramSettings {
   dailyTimeRange: string;
@@ -24,6 +25,7 @@ interface ProgramSettings {
 
 export default function ProgramCreationScreen() {
   const { colors, isDarkMode } = useTheme();
+  const { showToast } = useToast();
   const navigation = useNavigation<any>();
   
   const [programSettings, setProgramSettings] = useState<ProgramSettings>({
@@ -83,7 +85,7 @@ export default function ProgramCreationScreen() {
     } else {
       // Maksimum 7 gün kontrolü
       if (selectedDates.length >= 7) {
-        Alert.alert('Uyarı', 'Maksimum 7 gün seçebilirsiniz!');
+        showToast('Maksimum 7 gün seçebilirsiniz!', 'warning', 'Uyarı');
         return;
       }
       
@@ -106,7 +108,7 @@ export default function ProgramCreationScreen() {
         
         // Maksimum 7 gün kontrolü (yeni başlangıç + mevcut günler)
         if (daysBetween + 1 > 7) {
-          Alert.alert('Uyarı', 'Maksimum 7 gün seçebilirsiniz!');
+          showToast('Maksimum 7 gün seçebilirsiniz!', 'warning', 'Uyarı');
           return;
         }
         
@@ -128,7 +130,7 @@ export default function ProgramCreationScreen() {
         
         // Maksimum 7 gün kontrolü
         if (daysBetween + 1 > 7) {
-          Alert.alert('Uyarı', 'Maksimum 7 gün seçebilirsiniz!');
+          showToast('Maksimum 7 gün seçebilirsiniz!', 'warning', 'Uyarı');
           return;
         }
         
@@ -148,7 +150,7 @@ export default function ProgramCreationScreen() {
         // Ama önce mevcut aralığı kontrol et
         const currentRange = Math.ceil((lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
         if (currentRange >= 7) {
-          Alert.alert('Uyarı', 'Maksimum 7 gün seçebilirsiniz!');
+          showToast('Maksimum 7 gün seçebilirsiniz!', 'warning', 'Uyarı');
           return;
         }
         
@@ -226,9 +228,9 @@ export default function ProgramCreationScreen() {
       // Ödevleri de kaydet
       await saveAssignmentsToDates();
       
-      Alert.alert('Başarılı', 'Program kaydedildi!');
+      showToast('Program kaydedildi!', 'success', 'Başarılı');
     } catch (error) {
-      Alert.alert('Hata', 'Program kaydedilirken bir hata oluştu!');
+      showToast('Program kaydedilirken bir hata oluştu!', 'error', 'Hata');
     }
   };
 
@@ -243,12 +245,12 @@ export default function ProgramCreationScreen() {
     
     // Hata kontrolü
     if (lessonDuration <= 0 || breakDuration < 0) {
-      Alert.alert('Hata', 'Lütfen geçerli değerler girin!');
+      showToast('Lütfen geçerli değerler girin!', 'error', 'Hata');
       return;
     }
 
     if (selectedDates.length === 0) {
-      Alert.alert('Uyarı', 'Lütfen en az bir gün seçin!');
+      showToast('Lütfen en az bir gün seçin!', 'warning', 'Uyarı');
       return;
     }
     
@@ -262,7 +264,7 @@ export default function ProgramCreationScreen() {
       const totalMinutes = endMinutes - startMinutes;
       
       if (totalMinutes <= 0) {
-        Alert.alert('Hata', 'Başlangıç saati bitiş saatinden küçük olmalı!');
+        showToast('Başlangıç saati bitiş saatinden küçük olmalı!', 'error', 'Hata');
         return;
       }
       
@@ -270,7 +272,7 @@ export default function ProgramCreationScreen() {
       const slotsPerDay = Math.floor(totalMinutes / slotDuration);
       
       if (slotsPerDay <= 0) {
-        Alert.alert('Hata', 'Günlük saat aralığı çok kısa! Ders ve tenefüs sürelerini kontrol edin.');
+        showToast('Günlük saat aralığı çok kısa! Ders ve tenefüs sürelerini kontrol edin.', 'error', 'Hata');
         return;
       }
       
@@ -313,10 +315,10 @@ export default function ProgramCreationScreen() {
       });
       
       setProgramTable(table);
-      Alert.alert('Başarılı', `Program tablosu oluşturuldu!\n${selectedDates.length} gün, günde ${slotsPerDay} slot`);
+      showToast(`${selectedDates.length} gün, günde ${slotsPerDay} ders saati`, 'success', 'Program tablosu oluşturuldu!');
       setShowSettingsModal(false);
     } catch (error) {
-      Alert.alert('Hata', 'Saat formatı hatalı! (Örnek: 08:00 - 18:00)');
+      showToast('Saat formatı hatalı! (Örnek: 08:00 - 18:00)', 'error', 'Hata');
     }
   };
 
@@ -380,14 +382,14 @@ export default function ProgramCreationScreen() {
         // Mesaj oluştur
         let message = `${assignments.length} ödev güncellendi!`;
         
-        Alert.alert('Başarılı', message);
+        showToast(message, 'success', 'Başarılı');
       } else {
-        Alert.alert('Uyarı', 'Kaydedilecek ödev bulunamadı!');
+        showToast('Kaydedilecek ödev bulunamadı!', 'warning', 'Uyarı');
       }
     } catch (error) {
       console.error('Ödev kaydetme hatası:', error);
       const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu';
-      Alert.alert('Hata', `Ödevler kaydedilirken bir hata oluştu: ${errorMessage}`);
+      showToast(`Ödevler kaydedilirken bir hata oluştu: ${errorMessage}`, 'error', 'Hata');
     }
   };
 

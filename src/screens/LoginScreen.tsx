@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../contexts/ToastContext';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -24,10 +25,11 @@ export default function LoginScreen() {
   const navigation = useNavigation();
   const { login } = useAuth();
   const { colors } = useTheme();
+  const { showToast } = useToast();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      showToast('Lütfen tüm alanları doldurun', 'error', 'Hata');
       return;
     }
     
@@ -36,7 +38,7 @@ export default function LoginScreen() {
       await login('dummy-token');
       // Navigation otomatik olarak Main'e yönlendirecek
     } catch (error) {
-      Alert.alert('Hata', 'Giriş yapılamadı');
+      showToast('Giriş yapılamadı', 'error', 'Hata');
     }
   };
 
