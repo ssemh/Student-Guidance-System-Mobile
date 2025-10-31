@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useToast } from '../contexts/ToastContext';
 
 
 interface Counter {
@@ -23,6 +24,7 @@ interface Counter {
 }
 
 export default function CountersScreen() {
+  const { showToast } = useToast();
   const [counters, setCounters] = useState<Counter[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCounter, setSelectedCounter] = useState<Counter | null>(null);
@@ -71,7 +73,7 @@ export default function CountersScreen() {
 
   const addCounter = () => {
     if (!counterTitle.trim()) {
-      Alert.alert('Hata', 'Lütfen başlık girin');
+      showToast('Lütfen başlık girin', 'error', 'Hata');
       return;
     }
 
@@ -264,7 +266,7 @@ export default function CountersScreen() {
                 style={styles.dateButton}
                 onPress={() => {
                   // Burada tarih seçici açılacak
-                  Alert.alert('Bilgi', 'Tarih seçici özelliği eklenecek');
+                  showToast('Tarih seçici özelliği eklenecek', 'info', 'Bilgi');
                 }}
               >
                 <Text style={styles.dateButtonText}>Tarih Seç</Text>

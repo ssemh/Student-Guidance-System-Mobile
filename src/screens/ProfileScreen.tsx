@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../contexts/ToastContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 
@@ -26,6 +27,7 @@ export default function ProfileScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const { logout } = useAuth();
   const { isDarkMode, toggleDarkMode, colors } = useTheme();
+  const { showToast } = useToast();
   
   // Profile data state
   const [profileData, setProfileData] = useState({
@@ -90,10 +92,10 @@ export default function ProfileScreen() {
       setDisplayName(`${profileData.firstName} ${profileData.lastName}`);
       setDisplayEmail(profileData.email);
       setShowAccountSettings(false);
-      Alert.alert('Başarılı', 'Profil bilgileriniz güncellendi!');
+      showToast('Profil bilgileriniz güncellendi!', 'success', 'Başarılı');
     } catch (error) {
       console.log('Veri kaydedilemedi:', error);
-      Alert.alert('Hata', 'Bilgiler kaydedilemedi!');
+      showToast('Bilgiler kaydedilemedi!', 'error', 'Hata');
     } finally {
       setIsLoading(false);
     }

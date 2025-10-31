@@ -16,10 +16,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as DocumentPicker from 'expo-document-picker';
 import { Audio } from 'expo-av';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../contexts/ToastContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Tam Ekran TYT Deneme Bileşeni
 function FullscreenTYTPracticeView({ onClose, initialTimeLeft, initialIsRunning }: { onClose: (p?: { timeLeft: number; isRunning: boolean }) => void; initialTimeLeft?: number; initialIsRunning?: boolean }) {
+  const { showToast } = useToast();
   const [timeLeft, setTimeLeft] = useState(initialTimeLeft ?? (165 * 60));
   const [isRunning, setIsRunning] = useState(initialIsRunning ?? false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -30,7 +32,7 @@ function FullscreenTYTPracticeView({ onClose, initialTimeLeft, initialIsRunning 
         setTimeLeft(prev => {
           if (prev <= 1) {
             setIsRunning(false);
-            Alert.alert('Süre Doldu!', 'TYT Deneme süreniz dolmuştur.');
+            showToast('TYT Deneme süreniz dolmuştur.', 'warning', 'Süre Doldu!');
             return 0;
           }
           return prev - 1;
@@ -116,6 +118,7 @@ function FullscreenCustomCountdownView({
   initialTimeLeftSeconds?: number;
   initialIsRunning?: boolean;
 }) {
+  const { showToast } = useToast();
   const [timeLeft, setTimeLeft] = useState((initialTimeLeftSeconds ?? (duration * 60)));
   const [isRunning, setIsRunning] = useState(initialIsRunning ?? false);
   const [selectedSound, setSelectedSound] = useState<{ uri: string; name: string } | null>(null);
@@ -161,10 +164,10 @@ function FullscreenCustomCountdownView({
           uri: result.assets[0].uri,
           name: result.assets[0].name || 'Ses',
         });
-        Alert.alert('Başarılı', 'Ses seçildi: ' + result.assets[0].name);
+        showToast('Ses seçildi: ' + result.assets[0].name, 'success', 'Başarılı');
       }
     } catch (error) {
-      Alert.alert('Hata', 'Ses seçilemedi');
+      showToast('Ses seçilemedi', 'error', 'Hata');
     }
   };
 
@@ -174,9 +177,7 @@ function FullscreenCustomCountdownView({
         setTimeLeft(prev => {
           if (prev <= 1) {
             setIsRunning(false);
-            Alert.alert('Süre Doldu!', 'Geri sayımınız tamamlandı.', [
-              { text: 'Tamam', onPress: stopSound }
-            ]);
+            showToast('Geri sayımınız tamamlandı.', 'warning', 'Süre Doldu!');
             playSound();
             return 0;
           }
@@ -268,6 +269,7 @@ function FullscreenCustomCountdownView({
 
 // Tam Ekran AYT Deneme Bileşeni
 function FullscreenAYTPracticeView({ onClose, initialTimeLeft, initialIsRunning }: { onClose: (p?: { timeLeft: number; isRunning: boolean }) => void; initialTimeLeft?: number; initialIsRunning?: boolean }) {
+  const { showToast } = useToast();
   const [timeLeft, setTimeLeft] = useState(initialTimeLeft ?? (180 * 60));
   const [isRunning, setIsRunning] = useState(initialIsRunning ?? false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -278,7 +280,7 @@ function FullscreenAYTPracticeView({ onClose, initialTimeLeft, initialIsRunning 
         setTimeLeft(prev => {
           if (prev <= 1) {
             setIsRunning(false);
-            Alert.alert('Süre Doldu!', 'AYT Deneme süreniz dolmuştur.');
+            showToast('AYT Deneme süreniz dolmuştur.', 'warning', 'Süre Doldu!');
             return 0;
           }
           return prev - 1;
@@ -888,6 +890,7 @@ function CustomCountdownView({
   externalState?: { timeLeftSeconds?: number; isRunning?: boolean } | null;
 }) {
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const [timeLeft, setTimeLeft] = useState(customDuration * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [selectedSound, setSelectedSound] = useState<{ uri: string; name: string } | null>(null);
@@ -933,10 +936,10 @@ function CustomCountdownView({
           uri: result.assets[0].uri,
           name: result.assets[0].name || 'Ses',
         });
-        Alert.alert('Başarılı', 'Ses seçildi: ' + result.assets[0].name);
+        showToast('Ses seçildi: ' + result.assets[0].name, 'success', 'Başarılı');
       }
     } catch (error) {
-      Alert.alert('Hata', 'Ses seçilemedi');
+      showToast('Ses seçilemedi', 'error', 'Hata');
     }
   };
 
@@ -946,9 +949,7 @@ function CustomCountdownView({
         setTimeLeft(prev => {
           if (prev <= 1) {
             setIsRunning(false);
-            Alert.alert('Süre Doldu!', 'Geri sayımınız tamamlandı.', [
-              { text: 'Tamam', onPress: stopSound }
-            ]);
+            showToast('Geri sayımınız tamamlandı.', 'warning', 'Süre Doldu!');
             playSound();
             return 0;
           }
@@ -1089,6 +1090,7 @@ function CustomCountdownSetup({
   onStart: (duration: number) => void;
 }) {
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const [hours, setHours] = useState('0');
   const [minutes, setMinutes] = useState('0');
   const [seconds, setSeconds] = useState('0');
@@ -1099,7 +1101,7 @@ function CustomCountdownSetup({
 
   const handleStart = () => {
     if (totalSeconds <= 0) {
-      Alert.alert('Hata', 'Lütfen geçerli bir süre girin.');
+      showToast('Lütfen geçerli bir süre girin.', 'error', 'Hata');
       return;
     }
     onStart(totalSeconds / 60);
@@ -1233,6 +1235,7 @@ function CustomCountdownSetup({
 // AYT Deneme Geri Sayım Bileşeni
 function AYTPracticeView({ onBack, onFullscreen, externalState }: { onBack: () => void; onFullscreen: (p: { timeLeft: number; isRunning: boolean }) => void; externalState?: { timeLeft?: number; isRunning?: boolean } | null }) {
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const [timeLeft, setTimeLeft] = useState(180 * 60); // 180 dakika = 10800 saniye
   const [isRunning, setIsRunning] = useState(false);
   const [selectedSound, setSelectedSound] = useState<{ uri: string; name: string } | null>(null);
@@ -1254,7 +1257,7 @@ function AYTPracticeView({ onBack, onFullscreen, externalState }: { onBack: () =
         await sound.playAsync();
         soundRef.current = sound;
       } else {
-        Alert.alert('Ses Seç', 'Lütfen önce bir ses seçin!');
+        showToast('Lütfen önce bir ses seçin!', 'warning', 'Ses Seç');
       }
     } catch (error) {
       console.error('Ses çalınamadı:', error);
@@ -1285,10 +1288,10 @@ function AYTPracticeView({ onBack, onFullscreen, externalState }: { onBack: () =
           uri: result.assets[0].uri,
           name: result.assets[0].name || 'Ses',
         });
-        Alert.alert('Başarılı', 'Ses seçildi: ' + result.assets[0].name);
+        showToast('Ses seçildi: ' + result.assets[0].name, 'success', 'Başarılı');
       }
     } catch (error) {
-      Alert.alert('Hata', 'Ses seçilemedi');
+      showToast('Ses seçilemedi', 'error', 'Hata');
     }
   };
 
@@ -1394,7 +1397,7 @@ function AYTPracticeView({ onBack, onFullscreen, externalState }: { onBack: () =
           style={styles.controlButton} 
           onPress={() => {
             // Ses seçme işlemi burada yapılacak
-            Alert.alert('Bildirim Sesi', 'Ses seçme özelliği yakında eklenecek');
+            showToast('Ses seçme özelliği yakında eklenecek', 'info', 'Bildirim Sesi');
           }}
         >
           <Ionicons name="volume-high" size={18} color="white" />
@@ -1423,6 +1426,7 @@ function AYTPracticeView({ onBack, onFullscreen, externalState }: { onBack: () =
 // TYT Deneme Geri Sayım Bileşeni
 function TYTPracticeView({ onBack, onFullscreen, externalState }: { onBack: () => void; onFullscreen: (p: { timeLeft: number; isRunning: boolean }) => void; externalState?: { timeLeft?: number; isRunning?: boolean } | null }) {
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const [timeLeft, setTimeLeft] = useState(165 * 60); // 165 dakika = 9900 saniye
   const [isRunning, setIsRunning] = useState(false);
   const [selectedSound, setSelectedSound] = useState<{ uri: string; name: string } | null>(null);
@@ -1444,7 +1448,7 @@ function TYTPracticeView({ onBack, onFullscreen, externalState }: { onBack: () =
         await sound.playAsync();
         soundRef.current = sound;
       } else {
-        Alert.alert('Ses Seç', 'Lütfen önce bir ses seçin!');
+        showToast('Lütfen önce bir ses seçin!', 'warning', 'Ses Seç');
       }
     } catch (error) {
       console.error('Ses çalınamadı:', error);
@@ -1475,10 +1479,10 @@ function TYTPracticeView({ onBack, onFullscreen, externalState }: { onBack: () =
           uri: result.assets[0].uri,
           name: result.assets[0].name || 'Ses',
         });
-        Alert.alert('Başarılı', 'Ses seçildi: ' + result.assets[0].name);
+        showToast('Ses seçildi: ' + result.assets[0].name, 'success', 'Başarılı');
       }
     } catch (error) {
-      Alert.alert('Hata', 'Ses seçilemedi');
+      showToast('Ses seçilemedi', 'error', 'Hata');
     }
   };
 
@@ -1705,6 +1709,7 @@ function MiniBoardPreview() {
 
 export default function HomeScreen() {
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const navigation = useNavigation();
   const [showStopwatch, setShowStopwatch] = useState(false);
   const [showFullscreen, setShowFullscreen] = useState(false);
@@ -1749,31 +1754,38 @@ export default function HomeScreen() {
       return { 
         message: 'Günaydın!', 
         colors: ['#FFE29F', '#FFA99F'],
-        textColor: '#1F2937'
+        textColor: '#1F2937',
+        type: 'morning'
       };
     } else if (hour >= 12 && hour < 18) {
       return { 
         message: 'İyi Günler!', 
         colors: ['#A1C4FD', '#C2E9FB'],
-        textColor: '#111827'
+        textColor: '#111827',
+        type: 'day'
       };
     } else if (hour >= 18 && hour < 22) {
       return { 
         message: 'İyi Akşamlar!', 
         colors: ['#1E3A8A', '#0F172A'],
-        textColor: '#FDE68A'
+        textColor: '#FDE68A',
+        type: 'evening'
       };
     } else {
       return { 
         message: 'İyi Geceler!', 
         colors: ['#0F172A', '#020617'],
-        textColor: '#93C5FD'
+        textColor: '#93C5FD',
+        type: 'night'
       };
     }
   };
 
   const greeting = getGreeting();
   const isEveningGreeting = greeting.message === 'İyi Akşamlar!';
+  const isMorningGreeting = greeting.message === 'Günaydın!';
+  const isDayGreeting = greeting.message === 'İyi Günler!';
+  const isNightGreeting = greeting.message === 'İyi Geceler!';
 
   if (showFullscreen) {
     return (
@@ -1847,7 +1859,13 @@ export default function HomeScreen() {
             colors={greeting.colors as any}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={[styles.greetingCard, isEveningGreeting && styles.eveningCard]}
+            style={[
+              styles.greetingCard, 
+              isEveningGreeting && styles.eveningCard,
+              isNightGreeting && styles.nightCard,
+              isMorningGreeting && styles.morningCard,
+              isDayGreeting && styles.dayCard
+            ]}
           >
             {isEveningGreeting && (
               <>
@@ -1862,9 +1880,73 @@ export default function HomeScreen() {
                 </View>
               </>
             )}
+            {isNightGreeting && (
+              <>
+                <View style={styles.nightMoonGlow} />
+                <Ionicons name="moon" size={52} color="#E0E7FF" style={styles.nightMoon} />
+                <View style={styles.nightStarsLayer}>
+                  <View style={[styles.nightStar, { top: 10, left: '15%', opacity: 0.95 }]} />
+                  <View style={[styles.nightStar, { top: 25, right: '20%', opacity: 0.8 }]} />
+                  <View style={[styles.nightStar, { top: 40, left: '65%', opacity: 0.85 }]} />
+                  <View style={[styles.nightStar, { top: 60, left: '35%', opacity: 0.7 }]} />
+                  <View style={[styles.nightStar, { top: 75, right: '10%', opacity: 0.9 }]} />
+                  <View style={[styles.nightStar, { top: 20, left: '45%', opacity: 0.75 }]} />
+                  <View style={[styles.nightStar, { top: 55, right: '35%', opacity: 0.65 }]} />
+                </View>
+              </>
+            )}
+            {isMorningGreeting && (
+              <>
+                <View style={styles.morningSunGlow} />
+                <Ionicons name="sunny" size={56} color="#FFD700" style={styles.morningSun} />
+                <View style={styles.morningCloudsLayer}>
+                  <View style={[styles.morningCloud, { top: 15, left: '18%' }]} />
+                  <View style={[styles.morningCloudPart, { top: 12, left: '16%', width: 35, height: 35 }]} />
+                  <View style={[styles.morningCloudPart, { top: 12, left: '22%', width: 40, height: 35 }]} />
+                  <View style={[styles.morningCloudPart, { top: 18, left: '28%', width: 30, height: 30 }]} />
+                  <View style={[styles.morningCloud, { top: 38, left: '65%' }]} />
+                  <View style={[styles.morningCloudPart, { top: 35, left: '63%', width: 32, height: 32 }]} />
+                  <View style={[styles.morningCloudPart, { top: 35, left: '69%', width: 38, height: 32 }]} />
+                  <View style={[styles.morningCloudPart, { top: 41, left: '73%', width: 28, height: 28 }]} />
+                  <View style={[styles.morningCloud, { top: 53, left: '52%' }]} />
+                  <View style={[styles.morningCloudPart, { top: 50, left: '50%', width: 33, height: 33 }]} />
+                  <View style={[styles.morningCloudPart, { top: 50, left: '56%', width: 36, height: 33 }]} />
+                  <View style={[styles.morningCloudPart, { top: 56, left: '60%', width: 26, height: 26 }]} />
+                </View>
+              </>
+            )}
+            {isDayGreeting && (
+              <>
+                <View style={styles.daySunGlow} />
+                <Ionicons name="sunny" size={60} color="#FFA500" style={styles.daySun} />
+                <View style={styles.dayCloudsLayer}>
+                  <View style={[styles.dayCloud, { top: 20, left: '16%' }]} />
+                  <View style={[styles.dayCloudPart, { top: 17, left: '14%', width: 38, height: 38 }]} />
+                  <View style={[styles.dayCloudPart, { top: 17, left: '20%', width: 42, height: 38 }]} />
+                  <View style={[styles.dayCloudPart, { top: 23, left: '26%', width: 32, height: 32 }]} />
+                  <View style={[styles.dayCloud, { top: 43, left: '68%' }]} />
+                  <View style={[styles.dayCloudPart, { top: 40, left: '66%', width: 36, height: 36 }]} />
+                  <View style={[styles.dayCloudPart, { top: 40, left: '72%', width: 40, height: 36 }]} />
+                  <View style={[styles.dayCloudPart, { top: 46, left: '76%', width: 30, height: 30 }]} />
+                  <View style={[styles.dayCloud, { top: 58, left: '48%' }]} />
+                  <View style={[styles.dayCloudPart, { top: 55, left: '46%', width: 35, height: 35 }]} />
+                  <View style={[styles.dayCloudPart, { top: 55, left: '52%', width: 38, height: 35 }]} />
+                  <View style={[styles.dayCloudPart, { top: 61, left: '56%', width: 28, height: 28 }]} />
+                </View>
+              </>
+            )}
             <Text style={[styles.greetingTitle, { color: greeting.textColor }]}>{greeting.message}</Text>
             {isEveningGreeting && (
               <Text style={styles.eveningSubtitle}>Günün yorgunluğunu bırak, hedeflerine bir adım daha yaklaş.</Text>
+            )}
+            {isNightGreeting && (
+              <Text style={styles.nightSubtitle}>Huzurlu bir gece geçir, yarın için güç topla.</Text>
+            )}
+            {isMorningGreeting && (
+              <Text style={styles.morningSubtitle}>Yeni bir gün başlıyor, hedeflerine odaklan!</Text>
+            )}
+            {isDayGreeting && (
+              <Text style={styles.daySubtitle}>Gün ortasında motivasyonunu koru, ilerlemeye devam et.</Text>
             )}
             <View style={styles.divider} />
             <Text style={[styles.quoteText, { color: greeting.textColor, opacity: 0.85 }]}>"{dailyQuote.quote}"</Text>
@@ -2109,6 +2191,165 @@ const styles = StyleSheet.create({
   eveningSubtitle: {
     fontSize: 14,
     color: '#FCE7B2',
+    marginTop: 6,
+    opacity: 0.95,
+    textAlign: 'center',
+  },
+  nightCard: {
+    overflow: 'hidden',
+  },
+  nightMoonGlow: {
+    position: 'absolute',
+    top: -35,
+    right: -15,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(224, 231, 255, 0.12)',
+    zIndex: 1,
+  },
+  nightMoon: {
+    position: 'absolute',
+    top: 10,
+    right: 14,
+    textShadowColor: 'rgba(224, 231, 255, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
+    zIndex: 2,
+  },
+  nightStarsLayer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+  },
+  nightStar: {
+    position: 'absolute',
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#FFFFFF',
+  },
+  nightSubtitle: {
+    fontSize: 14,
+    color: '#C7D2FE',
+    marginTop: 6,
+    opacity: 0.95,
+    textAlign: 'center',
+  },
+  morningCard: {
+    overflow: 'hidden',
+  },
+  morningSunGlow: {
+    position: 'absolute',
+    top: -40,
+    right: -20,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(255, 215, 0, 0.25)',
+    zIndex: 1,
+  },
+  morningSun: {
+    position: 'absolute',
+    top: 8,
+    right: 12,
+    textShadowColor: 'rgba(255, 215, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 15,
+    zIndex: 2,
+  },
+  morningCloudsLayer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+  },
+  morningCloud: {
+    position: 'absolute',
+    width: 50,
+    height: 30,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    shadowColor: 'rgba(255, 255, 255, 0.5)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    zIndex: 1,
+  },
+  morningCloudPart: {
+    position: 'absolute',
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.55)',
+    shadowColor: 'rgba(255, 255, 255, 0.4)',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    zIndex: 0,
+  },
+  morningSubtitle: {
+    fontSize: 14,
+    color: '#78350F',
+    marginTop: 6,
+    opacity: 0.95,
+    textAlign: 'center',
+  },
+  dayCard: {
+    overflow: 'hidden',
+  },
+  daySunGlow: {
+    position: 'absolute',
+    top: -45,
+    right: -25,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255, 165, 0, 0.2)',
+    zIndex: 1,
+  },
+  daySun: {
+    position: 'absolute',
+    top: 10,
+    right: 14,
+    textShadowColor: 'rgba(255, 165, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 18,
+    zIndex: 2,
+  },
+  dayCloudsLayer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+  },
+  dayCloud: {
+    position: 'absolute',
+    width: 55,
+    height: 35,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    shadowColor: 'rgba(255, 255, 255, 0.4)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    zIndex: 1,
+  },
+  dayCloudPart: {
+    position: 'absolute',
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+    shadowColor: 'rgba(255, 255, 255, 0.35)',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    zIndex: 0,
+  },
+  daySubtitle: {
+    fontSize: 14,
+    color: '#1E3A8A',
     marginTop: 6,
     opacity: 0.95,
     textAlign: 'center',
