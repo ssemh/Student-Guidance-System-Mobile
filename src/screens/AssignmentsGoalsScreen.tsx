@@ -407,10 +407,171 @@ export default function AssignmentsGoalsScreen() {
     try {
       const data = await AsyncStorage.getItem('homeworkHistory');
       if (data) {
-        setHomeworkHistory(JSON.parse(data));
+        const parsed = JSON.parse(data);
+        // Eğer completedItems yoksa, her bir ödev için boş obje ekle
+        const updated = parsed.map((hw: any) => ({
+          ...hw,
+          completedItems: hw.completedItems || {}
+        }));
+        setHomeworkHistory(updated);
       }
     } catch (error) {
       console.error('Ödev geçmişi yüklenirken hata:', error);
+    }
+  };
+
+  // Ödev hücresini tamamla/tamamlanmamış yap
+  const toggleHomeworkItem = async (homeworkId: string, itemKey: string) => {
+    try {
+      const homework = homeworkHistory.find(hw => hw.id === homeworkId);
+      if (!homework) return;
+
+      const updatedHistory = homeworkHistory.map(hw => {
+        if (hw.id === homeworkId) {
+          const completedItems = hw.completedItems || {};
+          const newCompletedItems = {
+            ...completedItems,
+            [itemKey]: !completedItems[itemKey]
+          };
+          
+          return {
+            ...hw,
+            completedItems: newCompletedItems
+          };
+        }
+        return hw;
+      });
+
+      setHomeworkHistory(updatedHistory);
+      await AsyncStorage.setItem('homeworkHistory', JSON.stringify(updatedHistory));
+
+      // Tüm hücrelerin tamamlanıp tamamlanmadığını kontrol et
+      const updatedHomework = updatedHistory.find(hw => hw.id === homeworkId);
+      if (updatedHomework) {
+        const homeworkData = updatedHomework.data || {};
+        const allItemKeys = Object.keys(homeworkData);
+        const allCompleted = allItemKeys.length > 0 && allItemKeys.every(key => {
+          return updatedHomework.completedItems && updatedHomework.completedItems[key] === true;
+        });
+
+        // Eğer tüm hücreler tamamlandıysa, ana ekrandaki ödevleri güncelle
+        if (allCompleted) {
+          await updateAssignmentsForCompletedHomework(updatedHomework);
+        } else {
+          // Eğer tamamlanma durumu geri alındıysa, ödevleri tamamlanmamış yap
+          await updateAssignmentsForIncompleteHomework(updatedHomework);
+        }
+      }
+    } catch (error) {
+      console.error('Ödev durumu güncellenirken hata:', error);
+      showToast('Ödev durumu güncellenemedi', 'error', 'Hata');
+    }
+  };
+
+  // Tüm hücreler tamamlandığında ana ekrandaki ödevleri güncelle
+  const updateAssignmentsForCompletedHomework = async (homework: any) => {
+    try {
+      const homeworkData = homework.data || {};
+      const dateKeys = new Set<string>();
+      
+      // Ödev programındaki tüm tarihleri topla
+      Object.keys(homeworkData).forEach(key => {
+        // Key formatı: "YYYY-MM-DD-HH:mm - HH:mm" 
+        // İlk 3 parçayı birleştirerek tarihi al (YYYY-MM-DD)
+        // Key formatını parse et: "2024-12-20-08:00 - 09:00"
+        const match = key.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (match) {
+          dateKeys.add(match[1]);
+        }
+      });
+
+      // Ana ekrandaki ödevleri yükle
+      const storedAssignments = await AsyncStorage.getItem('assignments');
+      if (!storedAssignments) return;
+
+      const allAssignments = JSON.parse(storedAssignments);
+      
+      // Bu ödev programına ait ödevleri bul ve tamamla
+      const updatedAssignments = allAssignments.map((assignment: any) => {
+        // Eğer ödev bu programdan geliyor ve tarihi eşleşiyorsa
+        if (assignment.isFromProgram && dateKeys.has(assignment.dueDate)) {
+          return {
+            ...assignment,
+            isCompleted: true
+          };
+        }
+        return assignment;
+      });
+
+      await AsyncStorage.setItem('assignments', JSON.stringify(updatedAssignments));
+      setAssignments(updatedAssignments);
+      
+      // Filtreli ödevleri de güncelle
+      if (selectedWeek === null && selectedDay === null) {
+        setFilteredAssignments(updatedAssignments);
+      } else if (selectedDay !== null && selectedWeek !== null) {
+        filterAssignmentsByDay(updatedAssignments, selectedWeek, selectedDay);
+      } else if (selectedWeek !== null) {
+        filterAssignmentsByWeek(updatedAssignments, selectedWeek);
+      } else {
+        setFilteredAssignments(updatedAssignments);
+      }
+
+      showToast('Tüm ödevler tamamlandı!', 'success', 'Tebrikler');
+    } catch (error) {
+      console.error('Ana ekran ödevleri güncellenirken hata:', error);
+    }
+  };
+
+  // Tamamlanma durumu geri alındığında ödevleri tamamlanmamış yap
+  const updateAssignmentsForIncompleteHomework = async (homework: any) => {
+    try {
+      const homeworkData = homework.data || {};
+      const dateKeys = new Set<string>();
+      
+      // Ödev programındaki tüm tarihleri topla
+      Object.keys(homeworkData).forEach(key => {
+        // Key formatı: "YYYY-MM-DD-HH:mm - HH:mm" 
+        // İlk 3 parçayı birleştirerek tarihi al (YYYY-MM-DD)
+        // Key formatını parse et: "2024-12-20-08:00 - 09:00"
+        const match = key.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (match) {
+          dateKeys.add(match[1]);
+        }
+      });
+
+      // Ana ekrandaki ödevleri yükle
+      const storedAssignments = await AsyncStorage.getItem('assignments');
+      if (!storedAssignments) return;
+
+      const allAssignments = JSON.parse(storedAssignments);
+      
+      // Bu ödev programına ait ödevleri bul ve tamamlanmamış yap
+      const updatedAssignments = allAssignments.map((assignment: any) => {
+        if (assignment.isFromProgram && dateKeys.has(assignment.dueDate)) {
+          return {
+            ...assignment,
+            isCompleted: false
+          };
+        }
+        return assignment;
+      });
+
+      await AsyncStorage.setItem('assignments', JSON.stringify(updatedAssignments));
+      setAssignments(updatedAssignments);
+      
+      // Filtreli ödevleri de güncelle
+      if (selectedWeek === null && selectedDay === null) {
+        setFilteredAssignments(updatedAssignments);
+      } else if (selectedDay !== null && selectedWeek !== null) {
+        filterAssignmentsByDay(updatedAssignments, selectedWeek, selectedDay);
+      } else if (selectedWeek !== null) {
+        filterAssignmentsByWeek(updatedAssignments, selectedWeek);
+      } else {
+        setFilteredAssignments(updatedAssignments);
+      }
+    } catch (error) {
+      console.error('Ana ekran ödevleri güncellenirken hata:', error);
     }
   };
 
@@ -984,9 +1145,44 @@ export default function AssignmentsGoalsScreen() {
           {/* Ödevlerim Sekmesi */}
           {activeTab === 'homework' && (
             <View style={styles.contentArea}>
-              {/* Ödev Arama */}
-              <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                <Ionicons name="search" size={20} color={colors.textSecondary} />
+              {/* İstatistik Kartları - Ödev detayları açıkken gösterilmez */}
+              {!showHomeworkDetails && (
+                <>
+                  <View style={styles.statsContainer}>
+                    <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                      <LinearGradient
+                        colors={['#4ECDC4', '#44A08D']}
+                        style={styles.statIconContainer}
+                      >
+                        <Ionicons name="book" size={24} color="white" />
+                      </LinearGradient>
+                      <View style={styles.statContent}>
+                        <Text style={[styles.statNumber, { color: colors.text }]}>{homeworkHistory.length}</Text>
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Toplam Program</Text>
+                      </View>
+                    </View>
+                    <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                      <LinearGradient
+                        colors={['#FF6B6B', '#EE5A52']}
+                        style={styles.statIconContainer}
+                      >
+                        <Ionicons name="time" size={24} color="white" />
+                      </LinearGradient>
+                      <View style={styles.statContent}>
+                        <Text style={[styles.statNumber, { color: colors.text }]}>{filteredAssignments.length}</Text>
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Aktif Ödev</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Ödev Arama */}
+                  <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <LinearGradient
+                  colors={['#4ECDC4', '#44A08D']}
+                  style={styles.searchIconContainer}
+                >
+                  <Ionicons name="search" size={20} color="white" />
+                </LinearGradient>
                 <TextInput
                   style={[styles.searchInput, { color: colors.text }]}
                   placeholder="Ödev ara..."
@@ -994,7 +1190,14 @@ export default function AssignmentsGoalsScreen() {
                   value={homeworkSearch}
                   onChangeText={setHomeworkSearch}
                 />
+                {homeworkSearch.length > 0 && (
+                  <TouchableOpacity onPress={() => setHomeworkSearch('')}>
+                    <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
+                  </TouchableOpacity>
+                )}
               </View>
+                </>
+              )}
 
               {/* Ödev Listesi veya Detay */}
               {showHomeworkDetails ? (() => {
@@ -1015,6 +1218,14 @@ export default function AssignmentsGoalsScreen() {
                 const sortedTimeSlots = Array.from(allTimeSlots).sort();
                 const sortedDays = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'].filter(day => allDays.has(day));
 
+                // Tüm hücrelerin tamamlanıp tamamlanmadığını kontrol et
+                const homeworkDataForDetail = homework.data || {};
+                const allItemKeysForDetail = Object.keys(homeworkDataForDetail);
+                const completedItemsForDetail = homework.completedItems || {};
+                const allCompletedForDetail = allItemKeysForDetail.length > 0 && allItemKeysForDetail.every(key => {
+                  return completedItemsForDetail[key] === true;
+                });
+
                 return (
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tableScrollView}>
                     <View>
@@ -1023,7 +1234,22 @@ export default function AssignmentsGoalsScreen() {
                           <Ionicons name="arrow-back" size={24} color={colors.text} />
                         </TouchableOpacity>
                         <View style={styles.homeworkDetailTitleContainer}>
-                          <Text style={[styles.homeworkDetailTitle, { color: colors.text }]}>{homework.title}</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <Text style={[
+                              styles.homeworkDetailTitle, 
+                              { 
+                                color: allCompletedForDetail ? '#059669' : colors.text,
+                                textDecorationLine: allCompletedForDetail ? 'line-through' : 'none'
+                              }
+                            ]}>
+                              {homework.title}
+                            </Text>
+                            {allCompletedForDetail && (
+                              <View style={styles.completedBadge}>
+                                <Text style={styles.completedBadgeText}>Tamamlandı</Text>
+                              </View>
+                            )}
+                          </View>
                           <Text style={[styles.homeworkDetailDates, { color: colors.textSecondary }]}>
                             {homework.startDate} - {homework.endDate}
                           </Text>
@@ -1055,15 +1281,43 @@ export default function AssignmentsGoalsScreen() {
                                 return item.day === day && item.time === timeSlot;
                               });
                               const item = key ? homeworkData[key] : null;
+                              const isCompleted = item && homework.completedItems && homework.completedItems[key];
                               
                               return (
-                                <View key={day} style={[styles.tableCell, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                                <TouchableOpacity
+                                  key={day}
+                                  style={[
+                                    styles.tableCell,
+                                    styles.tableCellTouchable,
+                                    { 
+                                      backgroundColor: isCompleted ? '#D1FAE5' : colors.surface, 
+                                      borderColor: isCompleted ? '#10B981' : colors.border 
+                                    }
+                                  ]}
+                                  onPress={() => item && toggleHomeworkItem(homework.id, key)}
+                                  disabled={!item}
+                                  activeOpacity={0.7}
+                                >
                                   {item ? (
-                                    <Text style={[styles.tableCellText, { color: colors.text }]}>{item.homework}</Text>
+                                    <View style={styles.tableCellContent}>
+                                      <Text style={[
+                                        styles.tableCellText,
+                                        { 
+                                          color: isCompleted ? '#059669' : colors.text,
+                                          textDecorationLine: isCompleted ? 'line-through' : 'none',
+                                          flex: 1
+                                        }
+                                      ]}>
+                                        {item.homework}
+                                      </Text>
+                                      {isCompleted && (
+                                        <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+                                      )}
+                                    </View>
                                   ) : (
                                     <Text style={[styles.tableCellText, { color: colors.textSecondary, fontStyle: 'italic' }]}>-</Text>
                                   )}
-                                </View>
+                                </TouchableOpacity>
                               );
                             })}
                           </View>
@@ -1080,7 +1334,12 @@ export default function AssignmentsGoalsScreen() {
                 if (filtered.length === 0) {
                   return (
                     <View style={styles.emptyState}>
-                      <Ionicons name="document-outline" size={64} color={colors.textSecondary} />
+                      <LinearGradient
+                        colors={['#4ECDC4', '#44A08D']}
+                        style={styles.emptyIconContainer}
+                      >
+                        <Ionicons name="document-outline" size={64} color="white" />
+                      </LinearGradient>
                       <Text style={[styles.emptyTitle, { color: colors.text }]}>Ödev Bulunamadı</Text>
                       <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                         Program oluştur sekmesinden ödev programı oluşturabilirsiniz
@@ -1091,24 +1350,81 @@ export default function AssignmentsGoalsScreen() {
 
                 return (
                   <ScrollView showsVerticalScrollIndicator={false}>
-                    {filtered.map((homework) => (
-                      <TouchableOpacity
-                        key={homework.id}
-                        style={[styles.homeworkItem, { backgroundColor: colors.card, borderColor: colors.border }]}
-                        onPress={() => setShowHomeworkDetails(homework.id)}
-                      >
-                        <View style={styles.homeworkItemContent}>
-                          <Text style={[styles.homeworkItemTitle, { color: colors.text }]}>{homework.title}</Text>
-                          <View style={styles.homeworkItemDates}>
-                            <Ionicons name="calendar" size={14} color={colors.textSecondary} />
-                            <Text style={[styles.homeworkItemDate, { color: colors.textSecondary }]}>
-                              {homework.startDate} - {homework.endDate}
+                    {filtered.map((homework, index) => {
+                      // Tüm hücrelerin tamamlanıp tamamlanmadığını kontrol et
+                      const homeworkData = homework.data || {};
+                      const allItemKeys = Object.keys(homeworkData);
+                      const completedItems = homework.completedItems || {};
+                      const allCompleted = allItemKeys.length > 0 && allItemKeys.every(key => {
+                        return completedItems[key] === true;
+                      });
+
+                      return (
+                        <TouchableOpacity
+                          key={homework.id}
+                          style={[
+                            styles.homeworkItem, 
+                            { 
+                              backgroundColor: allCompleted ? '#D1FAE5' : colors.card, 
+                              borderColor: allCompleted ? '#10B981' : colors.border 
+                            }
+                          ]}
+                          onPress={() => setShowHomeworkDetails(homework.id)}
+                          activeOpacity={0.7}
+                        >
+                          {allCompleted ? (
+                            <View style={[styles.homeworkItemIcon, { backgroundColor: '#10B981' }]}>
+                              <Ionicons name="checkmark-circle" size={24} color="white" />
+                            </View>
+                          ) : (
+                            <LinearGradient
+                              colors={index % 2 === 0 ? ['#4ECDC4', '#44A08D'] : ['#3b82f6', '#2563eb']}
+                              style={styles.homeworkItemIcon}
+                            >
+                              <Ionicons name="document-text" size={24} color="white" />
+                            </LinearGradient>
+                          )}
+                          <View style={styles.homeworkItemContent}>
+                            <Text style={[
+                              styles.homeworkItemTitle, 
+                              { 
+                                color: allCompleted ? '#059669' : colors.text,
+                                textDecorationLine: allCompleted ? 'line-through' : 'none'
+                              }
+                            ]}>
+                              {homework.title}
                             </Text>
+                            <View style={styles.homeworkItemDates}>
+                              <Ionicons name="calendar" size={14} color={allCompleted ? '#059669' : colors.primary} />
+                              <Text style={[styles.homeworkItemDate, { color: colors.textSecondary }]}>
+                                {homework.startDate} - {homework.endDate}
+                              </Text>
+                            </View>
+                            <View style={[
+                              styles.homeworkItemBadge,
+                              { 
+                                backgroundColor: allCompleted ? '#D1FAE5' : '#F3F4F6'
+                              }
+                            ]}>
+                              {allCompleted ? (
+                                <>
+                                  <Ionicons name="checkmark-circle" size={12} color="#10B981" />
+                                  <Text style={[styles.homeworkItemBadgeText, { color: '#10B981' }]}>Tamamlandı</Text>
+                                </>
+                              ) : (
+                                <>
+                                  <Ionicons name="time-outline" size={12} color="#6B7280" />
+                                  <Text style={[styles.homeworkItemBadgeText, { color: '#6B7280' }]}>Kaydedildi</Text>
+                                </>
+                              )}
+                            </View>
                           </View>
-                        </View>
-                        <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-                      </TouchableOpacity>
-                    ))}
+                          <View style={styles.homeworkItemArrow}>
+                            <Ionicons name="chevron-forward" size={24} color={allCompleted ? '#10B981' : colors.primary} />
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </ScrollView>
                 );
               })()}
@@ -1118,6 +1434,25 @@ export default function AssignmentsGoalsScreen() {
           {/* Hedeflerim Sekmesi */}
           {activeTab === 'goals' && (
             <View style={styles.contentArea}>
+              {/* İstatistik Kartı */}
+              <View style={[styles.goalsStatsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <View style={styles.goalsStatsContent}>
+                  <View style={styles.goalsStatsItem}>
+                    <Text style={[styles.goalsStatsNumber, { color: colors.text }]}>
+                      {goals.filter(g => !g.completed).length}
+                    </Text>
+                    <Text style={[styles.goalsStatsLabel, { color: colors.textSecondary }]}>Aktif Hedef</Text>
+                  </View>
+                  <View style={styles.goalsStatsDivider} />
+                  <View style={styles.goalsStatsItem}>
+                    <Text style={[styles.goalsStatsNumber, { color: '#10B981' }]}>
+                      {goals.filter(g => g.completed).length}
+                    </Text>
+                    <Text style={[styles.goalsStatsLabel, { color: colors.textSecondary }]}>Tamamlanan</Text>
+                  </View>
+                </View>
+              </View>
+
               <View style={styles.goalsHeader}>
                 <View>
                   <Text style={[styles.contentTitle, { color: colors.text }]}>Hedeflerim</Text>
@@ -1128,75 +1463,142 @@ export default function AssignmentsGoalsScreen() {
                   onPress={() => setShowGoalModal(true)}
                 >
                   <LinearGradient
-                    colors={['#3b82f6', '#1e40af']}
+                    colors={['#FF6B6B', '#EE5A52']}
                     style={styles.addGoalButtonGradient}
                   >
-                    <Ionicons name="add" size={20} color="white" />
+                    <Ionicons name="add" size={24} color="white" />
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
 
               {/* Hedef Listesi */}
-              <View style={[styles.goalsList, { backgroundColor: colors.card }]}>
-                {goals.length > 0 ? (
-                  goals
-                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                    .map((goal) => (
-                    <View key={goal.id} style={[
-                      styles.goalItem,
-                      { backgroundColor: goal.completed ? (isDarkMode ? '#1a1a1a' : '#f9fafb') : colors.surface },
-                      goal.completed && { opacity: 0.7 }
-                    ]}>
-                      <View style={styles.goalInfo}>
-                        <Text style={[
-                          styles.goalTitle,
-                          { 
-                            color: goal.completed 
-                              ? (isDarkMode ? '#9ca3af' : '#9CA3AF')
-                              : colors.text,
-                            textDecorationLine: goal.completed ? 'line-through' : 'none'
-                          }
-                        ]}>{goal.title}</Text>
-                        {goal.description && (
+              {goals.length > 0 ? (
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  {goals
+                    .sort((a, b) => {
+                      // Önce tamamlanmamışlar, sonra tamamlananlar
+                      if (a.completed !== b.completed) {
+                        return a.completed ? 1 : -1;
+                      }
+                      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                    })
+                    .map((goal, index) => (
+                    <View 
+                      key={goal.id} 
+                      style={[
+                        styles.goalItem,
+                        { 
+                          backgroundColor: goal.completed 
+                            ? (isDarkMode ? '#1a1a1a' : '#f9fafb') 
+                            : colors.surface,
+                          borderColor: goal.completed ? colors.border : (index % 2 === 0 ? '#4ECDC4' : '#3b82f6'),
+                          borderLeftWidth: goal.completed ? 1 : 4
+                        },
+                        goal.completed && { opacity: 0.7 }
+                      ]}
+                    >
+                      <View style={styles.goalLeftContent}>
+                        {!goal.completed && (
+                          <LinearGradient
+                            colors={index % 2 === 0 ? ['#4ECDC4', '#44A08D'] : ['#3b82f6', '#2563eb']}
+                            style={styles.goalIconContainer}
+                          >
+                            <Ionicons name="flag" size={20} color="white" />
+                          </LinearGradient>
+                        )}
+                        {goal.completed && (
+                          <View style={styles.goalIconContainerCompleted}>
+                            <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+                          </View>
+                        )}
+                        <View style={styles.goalInfo}>
                           <Text style={[
-                            styles.goalDescription,
+                            styles.goalTitle,
                             { 
                               color: goal.completed 
-                                ? (isDarkMode ? '#6b7280' : '#D1D5DB')
-                                : colors.textSecondary,
+                                ? (isDarkMode ? '#9ca3af' : '#9CA3AF')
+                                : colors.text,
                               textDecorationLine: goal.completed ? 'line-through' : 'none'
                             }
-                          ]}>{goal.description}</Text>
-                        )}
-                        <Text style={[
-                          styles.goalDate,
-                          { 
-                            color: goal.completed 
-                              ? (isDarkMode ? '#6b7280' : '#D1D5DB')
-                              : colors.textSecondary
-                          }
-                        ]}>
-                          {new Date(goal.createdAt).toLocaleDateString('tr-TR')}
-                        </Text>
+                          ]}>{goal.title}</Text>
+                          {goal.description && (
+                            <Text style={[
+                              styles.goalDescription,
+                              { 
+                                color: goal.completed 
+                                  ? (isDarkMode ? '#6b7280' : '#D1D5DB')
+                                  : colors.textSecondary,
+                                textDecorationLine: goal.completed ? 'line-through' : 'none'
+                              }
+                            ]}>{goal.description}</Text>
+                          )}
+                          <View style={styles.goalFooter}>
+                            <View style={styles.goalDateContainer}>
+                              <Ionicons name="calendar-outline" size={12} color={colors.textSecondary} />
+                              <Text style={[
+                                styles.goalDate,
+                                { 
+                                  color: goal.completed 
+                                    ? (isDarkMode ? '#6b7280' : '#D1D5DB')
+                                    : colors.textSecondary
+                                }
+                              ]}>
+                                {new Date(goal.createdAt).toLocaleDateString('tr-TR', { 
+                                  day: 'numeric', 
+                                  month: 'long', 
+                                  year: 'numeric' 
+                                })}
+                              </Text>
+                            </View>
+                            {goal.completed && (
+                              <View style={styles.completedBadge}>
+                                <Text style={styles.completedBadgeText}>Tamamlandı</Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
                       </View>
                       <TouchableOpacity 
                         style={[
                           styles.completionButton,
-                          { borderColor: colors.border },
+                          { borderColor: goal.completed ? '#10B981' : colors.border },
                           goal.completed && styles.completedButton
                         ]}
                         onPress={() => toggleGoalCompletion(goal.id)}
                       >
                         {goal.completed && (
-                          <Ionicons name="checkmark" size={16} color="white" />
+                          <Ionicons name="checkmark" size={18} color="white" />
                         )}
                       </TouchableOpacity>
                     </View>
-                  ))
-                ) : (
-                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Henüz hedef eklenmemiş</Text>
-                )}
-              </View>
+                  ))}
+                </ScrollView>
+              ) : (
+                <View style={styles.emptyState}>
+                  <LinearGradient
+                    colors={['#FF6B6B', '#EE5A52']}
+                    style={styles.emptyIconContainer}
+                  >
+                    <Ionicons name="flag-outline" size={64} color="white" />
+                  </LinearGradient>
+                  <Text style={[styles.emptyTitle, { color: colors.text }]}>Henüz Hedef Yok</Text>
+                  <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                    İlk hedefinizi ekleyerek başlayın!
+                  </Text>
+                  <TouchableOpacity 
+                    style={styles.emptyActionButton}
+                    onPress={() => setShowGoalModal(true)}
+                  >
+                    <LinearGradient
+                      colors={['#FF6B6B', '#EE5A52']}
+                      style={styles.emptyActionButtonGradient}
+                    >
+                      <Ionicons name="add" size={20} color="white" />
+                      <Text style={styles.emptyActionButtonText}>Hedef Ekle</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           )}
         </View>
@@ -1869,20 +2271,21 @@ const styles = StyleSheet.create({
   // Hedef listesi stilleri
   goalItem: {
     backgroundColor: 'white',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   goalInfo: {
     flex: 1,
@@ -1901,9 +2304,9 @@ const styles = StyleSheet.create({
   },
   // Tamamlama butonu stilleri
   completionButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     borderWidth: 2,
     borderColor: '#D1D5DB',
     backgroundColor: 'white',
@@ -1913,11 +2316,11 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   completedButton: {
     backgroundColor: '#10B981',
@@ -2217,6 +2620,16 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRightWidth: 1,
   },
+  tableCellTouchable: {
+    minHeight: 60,
+    justifyContent: 'center',
+  },
+  tableCellContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
+  },
   tableCellInput: {
     fontSize: 14,
     minHeight: 60,
@@ -2253,9 +2666,17 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 20,
     borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   searchInput: {
     flex: 1,
@@ -2265,9 +2686,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   homeworkItemContent: {
     flex: 1,
@@ -2367,5 +2796,201 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     includeFontPadding: false,
     textAlignVertical: 'center',
+  },
+  // Yeni eklenen stiller
+  statsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  statCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  statIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  statContent: {
+    flex: 1,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  searchIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  homeworkItemIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  homeworkItemBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  homeworkItemBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#10B981',
+  },
+  homeworkItemArrow: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+  },
+  goalsStatsCard: {
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  goalsStatsContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  goalsStatsItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  goalsStatsDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#e5e7eb',
+    marginHorizontal: 12,
+  },
+  goalsStatsNumber: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  goalsStatsLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  goalLeftContent: {
+    flexDirection: 'row',
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  goalIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  goalIconContainerCompleted: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    backgroundColor: '#D1FAE5',
+  },
+  goalFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  goalDateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  completedBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: '#D1FAE5',
+  },
+  completedBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#10B981',
+  },
+  emptyIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  emptyActionButton: {
+    marginTop: 24,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  emptyActionButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  emptyActionButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
