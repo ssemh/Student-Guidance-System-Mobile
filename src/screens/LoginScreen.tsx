@@ -61,11 +61,12 @@ export default function LoginScreen() {
           </View>
 
           <View style={[styles.formContainer, { backgroundColor: colors.surface }]}>
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail" size={20} color="#3b82f6" />
+            <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Ionicons name="mail" size={20} color={colors.primary} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="E-posta"
+                placeholderTextColor={colors.textSecondary}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -73,11 +74,12 @@ export default function LoginScreen() {
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed" size={20} color="#3b82f6" />
+            <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Ionicons name="lock-closed" size={20} color={colors.primary} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Şifre"
+                placeholderTextColor={colors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -89,12 +91,12 @@ export default function LoginScreen() {
                 <Ionicons
                   name={showPassword ? 'eye-off' : 'eye'}
                   size={20}
-                  color="#3b82f6"
+                  color={colors.primary}
                 />
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+            <TouchableOpacity style={[styles.loginButton, { backgroundColor: colors.primary }]} onPress={handleLogin}>
               <Text style={styles.loginButtonText}>Giriş Yap</Text>
             </TouchableOpacity>
 
@@ -102,7 +104,7 @@ export default function LoginScreen() {
               style={styles.registerButton}
               onPress={() => navigation.navigate('Register')}
             >
-              <Text style={styles.registerButtonText}>
+              <Text style={[styles.registerButtonText, { color: colors.primary }]}>
                 Hesabın yok mu? Kaydol
               </Text>
             </TouchableOpacity>
@@ -142,7 +144,6 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   formContainer: {
-    backgroundColor: 'white',
     borderRadius: 20,
     padding: 30,
     shadowColor: '#000',
@@ -158,11 +159,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     borderRadius: 12,
     paddingHorizontal: 15,
     marginBottom: 20,
-    backgroundColor: '#f9fafb',
   },
   input: {
     flex: 1,
@@ -174,7 +173,6 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   loginButton: {
-    backgroundColor: '#3b82f6',
     borderRadius: 12,
     paddingVertical: 15,
     alignItems: 'center',
@@ -189,7 +187,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   registerButtonText: {
-    color: '#3b82f6',
     fontSize: 16,
   },
 });

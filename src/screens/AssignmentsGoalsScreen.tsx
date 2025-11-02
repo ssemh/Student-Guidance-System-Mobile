@@ -765,8 +765,13 @@ export default function AssignmentsGoalsScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.header}
         >
+          <View style={styles.headerPattern}>
+            <View style={styles.circle1} />
+            <View style={styles.circle2} />
+            <View style={styles.circle3} />
+          </View>
           <View style={styles.headerContent}>
-            <Ionicons name="book" size={40} color="white" />
+            <Ionicons name="book" size={40} color="white" style={{ marginBottom: 0 }} />
             <Text style={styles.headerTitle}>Ödev ve Hedefler</Text>
             <Text style={styles.headerSubtitle}>
               Görevlerini takip et ve hedeflerine ulaş
@@ -1852,22 +1857,62 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
     paddingHorizontal: 20,
     alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  headerPattern: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    top: 0,
+    left: 0,
+  },
+  circle1: {
+    position: 'absolute',
+    width: 210,
+    height: 210,
+    borderRadius: 105,
+    backgroundColor: 'rgba(255, 255, 255, 0.105)',
+    top: -55,
+    right: -45,
+  },
+  circle2: {
+    position: 'absolute',
+    width: 155,
+    height: 155,
+    borderRadius: 77.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.082)',
+    bottom: -32,
+    left: -25,
+  },
+  circle3: {
+    position: 'absolute',
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: 'rgba(255, 255, 255, 0.062)',
+    top: 25,
+    left: 40,
   },
   headerContent: {
     alignItems: 'center',
+    marginTop: 0,
+    marginBottom: 0,
+    zIndex: 1,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: 'white',
-    marginTop: 15,
-    marginBottom: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   headerSubtitle: {
     fontSize: 16,
     color: 'white',
     opacity: 0.9,
-    textAlign: 'center',
+    marginTop: 5,
   },
   content: {
     flex: 1,

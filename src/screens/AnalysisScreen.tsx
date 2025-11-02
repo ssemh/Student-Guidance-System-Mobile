@@ -671,8 +671,16 @@ export default function AnalysisScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
-        <Text style={styles.headerTitle}>Çözüm Analizi</Text>
-        <Text style={styles.headerSubtitle}>Başarını takip et ve geliştir</Text>
+        <View style={styles.headerPattern}>
+          <View style={styles.circle1} />
+          <View style={styles.circle2} />
+          <View style={styles.circle3} />
+        </View>
+        <View style={styles.headerContent}>
+          <Ionicons name="analytics" size={40} color="white" style={{ marginBottom: 0 }} />
+          <Text style={styles.headerTitle}>Çözüm Analizi</Text>
+          <Text style={styles.headerSubtitle}>Başarını takip et ve geliştir</Text>
+        </View>
       </LinearGradient>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -1201,18 +1209,18 @@ export default function AnalysisScreen() {
             
             {/* Ders Filtresi */}
             <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Ders Filtresi:</Text>
+              <Text style={[styles.filterLabel, { color: colors.text }]}>Ders Filtresi:</Text>
               <TouchableOpacity
-                style={styles.filterDropdownButton}
+                style={[styles.filterDropdownButton, { backgroundColor: colors.card, borderColor: colors.border }]}
                 onPress={() => setShowFilterDropdown(true)}
               >
-                <Text style={styles.filterDropdownButtonText}>
+                <Text style={[styles.filterDropdownButtonText, { color: colors.text }]}>
                   {filterSubject || 'Tüm Dersler'}
                 </Text>
                 <Ionicons 
                   name="chevron-down" 
                   size={20} 
-                  color="#6b7280" 
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
@@ -1229,37 +1237,37 @@ export default function AnalysisScreen() {
                 activeOpacity={1}
                 onPress={() => setShowFilterDropdown(false)}
               >
-                <View style={styles.modalContent}>
-                  <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>Ders Seçin</Text>
+                <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+                  <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+                    <Text style={[styles.modalTitle, { color: colors.text }]}>Ders Seçin</Text>
                     <TouchableOpacity
                       onPress={() => setShowFilterDropdown(false)}
                       style={styles.modalCloseButton}
                     >
-                      <Ionicons name="close" size={24} color="#6b7280" />
+                      <Ionicons name="close" size={24} color={colors.textSecondary} />
                     </TouchableOpacity>
                   </View>
                   
                   <ScrollView style={styles.modalScrollView} showsVerticalScrollIndicator={true}>
                     <TouchableOpacity
-                      style={styles.modalItem}
+                      style={[styles.modalItem, { borderBottomColor: colors.border }]}
                       onPress={() => {
                         setFilterSubject('');
                         setShowFilterDropdown(false);
                       }}
                     >
-                      <Text style={styles.modalItemText}>Tüm Dersler</Text>
+                      <Text style={[styles.modalItemText, { color: colors.text }]}>Tüm Dersler</Text>
                     </TouchableOpacity>
                     {(analysisType === 'konu' ? subjects : examSubjects).map((subject) => (
                       <TouchableOpacity
                         key={subject}
-                        style={styles.modalItem}
+                        style={[styles.modalItem, { borderBottomColor: colors.border }]}
                         onPress={() => {
                           setFilterSubject(subject);
                           setShowFilterDropdown(false);
                         }}
                       >
-                        <Text style={styles.modalItemText}>{subject}</Text>
+                        <Text style={[styles.modalItemText, { color: colors.text }]}>{subject}</Text>
                       </TouchableOpacity>
                     ))}
                   </ScrollView>
@@ -1268,12 +1276,9 @@ export default function AnalysisScreen() {
             </Modal>
             
             {filteredResults.map((result) => (
-              <LinearGradient
+              <View
                 key={result.id}
-                colors={['#ffffff', '#f9fafb']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.historyCard}
+                style={[styles.historyCard, { backgroundColor: colors.card }]}
               >
                 <View style={styles.historyHeader}>
                   <View style={styles.historyInfo}>
@@ -1281,20 +1286,20 @@ export default function AnalysisScreen() {
                       <Ionicons 
                         name={result.type === 'konu' ? 'book' : 'document-text'} 
                         size={20} 
-                        color="#6366f1" 
+                        color={colors.primary}
                       />
-                      <Text style={styles.historyType}>
+                      <Text style={[styles.historyType, { color: colors.primary }]}>
                         {result.type === 'konu' ? 'Konu Analizi' : 'Deneme Analizi'}
                       </Text>
                     </View>
-                    <Text style={styles.historySubject}>
+                    <Text style={[styles.historySubject, { color: colors.text }]}>
                       {result.subject}
                       {result.topic && ` - ${result.topic}`}
                       {result.examName && ` (${result.examName})`}
                     </Text>
                     <View style={styles.historyDateContainer}>
-                      <Ionicons name="calendar-outline" size={14} color="#6b7280" />
-                      <Text style={styles.historyDate}>{result.date}</Text>
+                      <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} />
+                      <Text style={[styles.historyDate, { color: colors.textSecondary }]}>{result.date}</Text>
                     </View>
                   </View>
                   
@@ -1312,15 +1317,15 @@ export default function AnalysisScreen() {
                 <View style={styles.historyStats}>
                   <View style={styles.historyStatItem}>
                     <Ionicons name="checkmark-circle" size={16} color="#10b981" />
-                    <Text style={styles.historyStat}>Doğru: {result.correctAnswers}</Text>
+                    <Text style={[styles.historyStat, { color: colors.text }]}>Doğru: {result.correctAnswers}</Text>
                   </View>
                   <View style={styles.historyStatItem}>
                     <Ionicons name="close-circle" size={16} color="#ef4444" />
-                    <Text style={styles.historyStat}>Yanlış: {result.wrongAnswers}</Text>
+                    <Text style={[styles.historyStat, { color: colors.text }]}>Yanlış: {result.wrongAnswers}</Text>
                   </View>
                   <View style={styles.historyStatItem}>
-                    <Ionicons name="help-circle" size={16} color="#6b7280" />
-                    <Text style={styles.historyStat}>Toplam: {result.totalQuestions}</Text>
+                    <Ionicons name="help-circle" size={16} color={colors.textSecondary} />
+                    <Text style={[styles.historyStat, { color: colors.text }]}>Toplam: {result.totalQuestions}</Text>
                   </View>
                 </View>
                 
@@ -1332,7 +1337,7 @@ export default function AnalysisScreen() {
                   <Ionicons name="trash" size={18} color="white" />
                   <Text style={styles.deleteButtonText}>Sil</Text>
                 </TouchableOpacity>
-              </LinearGradient>
+              </View>
             ))}
           </View>
         )}
@@ -1351,7 +1356,46 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 30,
     paddingHorizontal: 20,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  headerPattern: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    top: 0,
+    left: 0,
+  },
+  circle1: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255, 255, 255, 0.11)',
+    top: -45,
+    right: -50,
+  },
+  circle2: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    bottom: -35,
+    left: -20,
+  },
+  circle3: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    top: 30,
+    left: 50,
+  },
+  headerContent: {
     alignItems: 'center',
+    zIndex: 1,
   },
   headerTitle: {
     fontSize: 28,
@@ -1760,18 +1804,15 @@ const styles = StyleSheet.create({
   historyType: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6366f1',
     marginBottom: 5,
   },
   historySubject: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f2937',
     marginBottom: 5,
   },
   historyDate: {
     fontSize: 14,
-    color: '#6b7280',
   },
   historyScoreText: {
     fontSize: 20,
@@ -1798,7 +1839,6 @@ const styles = StyleSheet.create({
   },
   historyStat: {
     fontSize: 14,
-    color: '#6b7280',
     fontWeight: '500',
   },
   deleteButton: {
@@ -1835,7 +1875,6 @@ const styles = StyleSheet.create({
   filterLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
     marginBottom: 10,
   },
   filterDropdownSection: {
@@ -1907,7 +1946,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: 'white',
     borderRadius: 20,
     width: '80%',
     maxHeight: '70%',
@@ -1927,12 +1965,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#374151',
   },
   modalCloseButton: {
     padding: 5,
@@ -1944,11 +1980,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
   },
   modalItemText: {
     fontSize: 16,
-    color: '#374151',
     fontWeight: '500',
   },
   // Deneme adı stilleri

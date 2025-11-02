@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../contexts/ThemeContext';
 import { useToast } from '../contexts/ToastContext';
 
 export default function RegisterScreen() {
@@ -25,6 +26,7 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigation = useNavigation();
+  const { colors } = useTheme();
   const { showToast } = useToast();
 
   const handleRegister = () => {
@@ -62,23 +64,25 @@ export default function RegisterScreen() {
               <Text style={styles.subtitle}>Hemen Kaydol ve Başla!</Text>
             </View>
 
-            <View style={styles.formContainer}>
-              <View style={styles.inputContainer}>
-                <Ionicons name="person" size={20} color="#3b82f6" />
+            <View style={[styles.formContainer, { backgroundColor: colors.surface }]}>
+              <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <Ionicons name="person" size={20} color={colors.primary} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="Ad Soyad"
+                  placeholderTextColor={colors.textSecondary}
                   value={name}
                   onChangeText={setName}
                   autoCapitalize="words"
                 />
               </View>
 
-              <View style={styles.inputContainer}>
-                <Ionicons name="mail" size={20} color="#3b82f6" />
+              <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <Ionicons name="mail" size={20} color={colors.primary} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="E-posta"
+                  placeholderTextColor={colors.textSecondary}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -86,11 +90,12 @@ export default function RegisterScreen() {
                 />
               </View>
 
-              <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed" size={20} color="#3b82f6" />
+              <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <Ionicons name="lock-closed" size={20} color={colors.primary} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="Şifre"
+                  placeholderTextColor={colors.textSecondary}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
@@ -102,16 +107,17 @@ export default function RegisterScreen() {
                   <Ionicons
                     name={showPassword ? 'eye-off' : 'eye'}
                     size={20}
-                    color="#3b82f6"
+                    color={colors.primary}
                   />
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed" size={20} color="#3b82f6" />
+              <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <Ionicons name="lock-closed" size={20} color={colors.primary} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="Şifre Tekrar"
+                  placeholderTextColor={colors.textSecondary}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   secureTextEntry={!showConfirmPassword}
@@ -123,20 +129,20 @@ export default function RegisterScreen() {
                   <Ionicons
                     name={showConfirmPassword ? 'eye-off' : 'eye'}
                     size={20}
-                    color="#3b82f6"
+                    color={colors.primary}
                   />
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
+              <TouchableOpacity style={[styles.registerButton, { backgroundColor: colors.primary }]} onPress={handleRegister}>
                 <Text style={styles.registerButtonText}>Kaydol</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.loginButton}
-                onPress={() => navigation.navigate('Login')}
+                onPress={() => navigation.navigate('Login' as never)}
               >
-                <Text style={styles.loginButtonText}>
+                <Text style={[styles.loginButtonText, { color: colors.primary }]}>
                   Zaten hesabın var mı? Giriş Yap
                 </Text>
               </TouchableOpacity>
@@ -178,7 +184,6 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   formContainer: {
-    backgroundColor: 'white',
     borderRadius: 20,
     padding: 30,
     shadowColor: '#000',
@@ -194,11 +199,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     borderRadius: 12,
     paddingHorizontal: 15,
     marginBottom: 20,
-    backgroundColor: '#f9fafb',
   },
   input: {
     flex: 1,
@@ -210,7 +213,6 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   registerButton: {
-    backgroundColor: '#3b82f6',
     borderRadius: 12,
     paddingVertical: 15,
     alignItems: 'center',
@@ -225,7 +227,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loginButtonText: {
-    color: '#3b82f6',
     fontSize: 16,
   },
 });

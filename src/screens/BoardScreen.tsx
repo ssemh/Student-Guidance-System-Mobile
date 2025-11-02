@@ -100,11 +100,11 @@ export default function BoardScreen() {
     '#008000', '#FFA500', '#008080', '#4B0082', '#DC143C'
   ];
   const boardColors = [
-    '#D2691E', '#CD853F', '#DEB887', '#F4A460', '#D2B48C',
+    '#D2691E', '#CD853F', '#DEB887', '#F4A460', '#D2B48C', 
     '#F5DEB3', '#DDA0DD', '#98FB98', '#F0E68C', '#FFB6C1'
   ];
   const frameColors = [
-    '#8B4513', '#A0522D', '#654321', '#5D4037', '#3E2723',
+    '#8B4513', '#A0522D', '#654321', '#5D4037', '#3E2723', 
     '#000000', '#2F4F4F', '#8B0000', '#4B0082', '#2E8B57'
   ];
   const fontFamilies = ['System', 'Arial', 'Times New Roman', 'Courier New', 'Georgia', 'Verdana'];
@@ -245,19 +245,19 @@ export default function BoardScreen() {
   };
 
   const deleteNote = (id: string) => {
-    Alert.alert('Sil', 'Bu notu silmek istediğinizden emin misiniz?', [
-      { text: 'İptal', style: 'cancel' },
-      {
-        text: 'Sil',
-        style: 'destructive',
-        onPress: () => {
-          const updatedNotes = notes.filter(note => note.id !== id);
-          setNotes(updatedNotes);
-          saveNotes(updatedNotes);
+      Alert.alert('Sil', 'Bu notu silmek istediğinizden emin misiniz?', [
+        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Sil',
+          style: 'destructive',
+          onPress: () => {
+            const updatedNotes = notes.filter(note => note.id !== id);
+            setNotes(updatedNotes);
+            saveNotes(updatedNotes);
           if (editingNoteId === id) setEditingNoteId(null);
+          },
         },
-      },
-    ]);
+      ]);
   };
 
   const updateNote = (id: string, updates: Partial<Note>) => {
@@ -698,35 +698,35 @@ export default function BoardScreen() {
           </View>
         ) : (
           <>
-            <View style={styles.noteHeader}>
+        <View style={styles.noteHeader}>
               <Text 
                 style={[styles.noteTitle, { color: note.textColor, fontFamily: note.font }]} 
                 numberOfLines={2}
               >
                 {note.title}
               </Text>
-              <View style={styles.noteActions}>
-                <TouchableOpacity onPress={() => onToggleFavorite(note.id)}>
-                  <Ionicons 
-                    name={note.isFavorite ? "star" : "star-outline"} 
+          <View style={styles.noteActions}>
+            <TouchableOpacity onPress={() => onToggleFavorite(note.id)}>
+              <Ionicons 
+                name={note.isFavorite ? "star" : "star-outline"} 
                     size={16} 
                     color={note.isFavorite ? "#ef4444" : note.textColor + '80'} 
-                  />
-                </TouchableOpacity>
+              />
+            </TouchableOpacity>
                 <TouchableOpacity onPress={() => onStartEditing(note.id)}>
                   <Ionicons name="create-outline" size={16} color={note.textColor + '80'} />
-                </TouchableOpacity>
+            </TouchableOpacity>
                 <TouchableOpacity onPress={() => onDelete(note.id)}>
                   <Ionicons name="trash-outline" size={16} color={note.textColor + '80'} />
-                </TouchableOpacity>
-              </View>
-            </View>
+            </TouchableOpacity>
+          </View>
+        </View>
             <Text 
               style={[styles.noteText, { color: note.textColor, fontFamily: note.font }]} 
               numberOfLines={6}
             >
-              {note.content}
-            </Text>
+          {note.content}
+        </Text>
             {!note.isEditing && (
               <View style={styles.noteColorButtons}>
                 <TouchableOpacity
@@ -741,7 +741,7 @@ export default function BoardScreen() {
                 >
                   <Ionicons name="text-outline" size={14} color={note.textColor + '80'} />
                 </TouchableOpacity>
-              </View>
+        </View>
             )}
           </>
         )}
@@ -771,8 +771,8 @@ export default function BoardScreen() {
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
           <View style={{ flex: 1, marginLeft: 10 }}>
-            <Text style={styles.headerTitle}>Mantar Pano</Text>
-            <Text style={styles.headerSubtitle}>Notlarını organize et</Text>
+        <Text style={styles.headerTitle}>Mantar Pano</Text>
+        <Text style={styles.headerSubtitle}>Notlarını organize et</Text>
           </View>
           <TouchableOpacity
             style={styles.settingsButton}
@@ -932,7 +932,7 @@ export default function BoardScreen() {
                   <View style={[styles.colorPreviewButton, { backgroundColor: boardSettings.boardColor }]} />
                   <Text style={[styles.colorPickerButtonText, { color: themeColors.text }]}>Renk Seç</Text>
                 </TouchableOpacity>
-              </View>
+            </View>
 
               <View style={styles.settingsSection}>
                 <Text style={[styles.settingsSectionTitle, { color: themeColors.text }]}>Pano Resmi</Text>
@@ -948,15 +948,15 @@ export default function BoardScreen() {
                       source={typeof boardSettings.boardImage === 'string' ? { uri: boardSettings.boardImage } : boardSettings.boardImage}
                       style={styles.imagePreview}
                     />
-                    <TouchableOpacity
+            <TouchableOpacity
                       style={styles.removeImageButton}
                       onPress={() => setBoardSettings({ ...boardSettings, boardImage: require('../image/ss.jpg') })}
-                    >
+            >
                       <Ionicons name="close-circle" size={20} color="#ef4444" />
-                    </TouchableOpacity>
-                  </View>
+            </TouchableOpacity>
+          </View>
                 )}
-              </View>
+        </View>
 
               <View style={styles.settingsSection}>
                 <Text style={[styles.settingsSectionTitle, { color: themeColors.text }]}>Çerçeve Rengi</Text>
@@ -978,7 +978,7 @@ export default function BoardScreen() {
                 <Text style={[styles.settingsSectionTitle, { color: themeColors.text }]}>Varsayılan Not Şekli</Text>
                 <View style={styles.shapeButtons}>
                   {(['rectangle', 'rounded', 'circle'] as const).map((shape) => (
-                    <TouchableOpacity
+                  <TouchableOpacity
                       key={shape}
                       style={[
                         styles.shapeButton,
@@ -996,15 +996,15 @@ export default function BoardScreen() {
                         {shape === 'rectangle' ? 'Dikdörtgen' : shape === 'rounded' ? 'Yuvarlak Köşeli' : 'Yuvarlak'}
                       </Text>
                     </TouchableOpacity>
-                  ))}
-                </View>
+                ))}
               </View>
+            </View>
 
               <View style={styles.settingsSection}>
                 <Text style={[styles.settingsSectionTitle, { color: themeColors.text }]}>Varsayılan Font</Text>
                 <View style={styles.fontButtons}>
                   {fontFamilies.map((font) => (
-                    <TouchableOpacity
+                <TouchableOpacity 
                       key={font}
                       style={[
                         styles.fontButton,
@@ -1021,15 +1021,15 @@ export default function BoardScreen() {
                         { fontFamily: font }
                       ]}>
                         {font}
-                      </Text>
-                    </TouchableOpacity>
+                  </Text>
+                </TouchableOpacity>
                   ))}
                 </View>
               </View>
 
               <View style={styles.settingsSection}>
                 <Text style={[styles.settingsSectionTitle, { color: themeColors.text }]}>Varsayılan Not Rengi</Text>
-                <TouchableOpacity
+                    <TouchableOpacity 
                   style={styles.colorPickerButton}
                   onPress={() => {
                     setColorPickerType('note');
@@ -1040,12 +1040,12 @@ export default function BoardScreen() {
                 >
                   <View style={[styles.colorPreviewButton, { backgroundColor: boardSettings.defaultNoteColor }]} />
                   <Text style={[styles.colorPickerButtonText, { color: themeColors.text }]}>Renk Seç</Text>
-                </TouchableOpacity>
-              </View>
+                    </TouchableOpacity>
+            </View>
 
               <View style={styles.settingsSection}>
                 <Text style={[styles.settingsSectionTitle, { color: themeColors.text }]}>Varsayılan Yazı Rengi</Text>
-                <TouchableOpacity
+                  <TouchableOpacity
                   style={styles.colorPickerButton}
                   onPress={() => {
                     setColorPickerType('text');
@@ -1061,7 +1061,7 @@ export default function BoardScreen() {
             </ScrollView>
 
             <View style={styles.modalFooter}>
-              <TouchableOpacity
+                  <TouchableOpacity
                 style={styles.saveSettingsButton}
                 onPress={async () => {
                   await saveSettings();
@@ -1070,8 +1070,8 @@ export default function BoardScreen() {
               >
                 <Text style={styles.saveSettingsButtonText}>Kaydet</Text>
               </TouchableOpacity>
+              </View>
             </View>
-          </View>
         </View>
       </Modal>
 
@@ -1121,9 +1121,9 @@ export default function BoardScreen() {
                         styles.hueSliderIndicator,
                         { left: `${(hue / 360) * 100}%` }
                       ]}
-                    />
-                  </View>
-                </View>
+                  />
+              </View>
+            </View>
 
                 {/* Saturation & Lightness Grid */}
                 <View style={styles.saturationLightnessContainer}>
@@ -1170,8 +1170,8 @@ export default function BoardScreen() {
                         }
                       ]}
                     />
-                  </View>
-                </View>
+              </View>
+            </View>
 
               </View>
 
@@ -1183,7 +1183,7 @@ export default function BoardScreen() {
                   colorPickerType === 'board' ? boardColors : 
                   colorPickerType === 'frame' ? frameColors :
                   boardColors).map((color) => (
-                  <TouchableOpacity
+                <TouchableOpacity
                     key={color}
                     style={[
                       styles.colorPickerOption,
@@ -1211,10 +1211,10 @@ export default function BoardScreen() {
                   />
                 ))}
               </View>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
     </SafeAreaView>
   );
 }
@@ -1723,3 +1723,4 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 });
+
