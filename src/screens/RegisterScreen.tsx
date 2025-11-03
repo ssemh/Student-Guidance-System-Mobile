@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   Platform,
   Alert,
   ScrollView,
+  Animated,
+  Easing,
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +30,131 @@ export default function RegisterScreen() {
   const navigation = useNavigation();
   const { colors } = useTheme();
   const { showToast } = useToast();
+
+  // Animations
+  const logoScale = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim1 = useRef(new Animated.Value(50)).current;
+  const slideAnim2 = useRef(new Animated.Value(50)).current;
+  const slideAnim3 = useRef(new Animated.Value(50)).current;
+  const slideAnim4 = useRef(new Animated.Value(50)).current;
+  const slideAnim5 = useRef(new Animated.Value(50)).current;
+  const buttonScale = useRef(new Animated.Value(1)).current;
+  
+  // Bubble animations
+  const bubble1Y = useRef(new Animated.Value(0)).current;
+  const bubble1X = useRef(new Animated.Value(0)).current;
+  const bubble2Y = useRef(new Animated.Value(0)).current;
+  const bubble2X = useRef(new Animated.Value(0)).current;
+  const bubble3Y = useRef(new Animated.Value(0)).current;
+  const bubble3X = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Logo animation
+    Animated.spring(logoScale, {
+      toValue: 1,
+      friction: 4,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+
+    // Fade in animation
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+
+    // Slide up animations
+    Animated.stagger(100, [
+      Animated.spring(slideAnim1, {
+        toValue: 0,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim2, {
+        toValue: 0,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim3, {
+        toValue: 0,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim4, {
+        toValue: 0,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim5, {
+        toValue: 0,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Floating bubble animations
+    const createBubbleAnimation = (animY: Animated.Value, animX: Animated.Value, delay: number) => {
+      return Animated.loop(
+        Animated.parallel([
+          Animated.sequence([
+            Animated.timing(animY, {
+              toValue: 1,
+              duration: 3000 + delay * 500,
+              easing: Easing.inOut(Easing.sin),
+              useNativeDriver: true,
+            }),
+            Animated.timing(animY, {
+              toValue: 0,
+              duration: 3000 + delay * 500,
+              easing: Easing.inOut(Easing.sin),
+              useNativeDriver: true,
+            }),
+          ]),
+          Animated.sequence([
+            Animated.timing(animX, {
+              toValue: 1,
+              duration: 4000 + delay * 600,
+              easing: Easing.inOut(Easing.sin),
+              useNativeDriver: true,
+            }),
+            Animated.timing(animX, {
+              toValue: 0,
+              duration: 4000 + delay * 600,
+              easing: Easing.inOut(Easing.sin),
+              useNativeDriver: true,
+            }),
+          ]),
+        ])
+      );
+    };
+
+    Animated.parallel([
+      createBubbleAnimation(bubble1Y, bubble1X, 0),
+      createBubbleAnimation(bubble2Y, bubble2X, 1),
+      createBubbleAnimation(bubble3Y, bubble3X, 2),
+    ]).start();
+  }, []);
+
+  const handlePressIn = () => {
+    Animated.spring(buttonScale, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(buttonScale, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
 
   const handleRegister = () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -53,19 +180,110 @@ export default function RegisterScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
+        <View style={styles.headerPattern}>
+          <Animated.View 
+            style={[
+              styles.circle1,
+              {
+                transform: [
+                  {
+                    translateY: bubble1Y.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, -30],
+                    }),
+                  },
+                  {
+                    translateX: bubble1X.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 20],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          />
+          <Animated.View 
+            style={[
+              styles.circle2,
+              {
+                transform: [
+                  {
+                    translateY: bubble2Y.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 25],
+                    }),
+                  },
+                  {
+                    translateX: bubble2X.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, -15],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          />
+          <Animated.View 
+            style={[
+              styles.circle3,
+              {
+                transform: [
+                  {
+                    translateY: bubble3Y.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, -20],
+                    }),
+                  },
+                  {
+                    translateX: bubble3X.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 10],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          />
+        </View>
+
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.content}
         >
           <ScrollView showsVerticalScrollIndicator={false}>
-            <View style={styles.logoContainer}>
+            <Animated.View
+              style={[
+                styles.logoContainer,
+                {
+                  opacity: fadeAnim,
+                  transform: [{ scale: logoScale }],
+                },
+              ]}
+            >
               <Ionicons name="compass" size={80} color="white" />
               <Text style={styles.logoText}>Pusula</Text>
               <Text style={styles.subtitle}>Hemen Kaydol ve Başla!</Text>
-            </View>
+            </Animated.View>
 
-            <View style={[styles.formContainer, { backgroundColor: colors.surface }]}>
-              <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Animated.View
+              style={[
+                styles.formContainer,
+                { backgroundColor: colors.surface },
+                {
+                  opacity: fadeAnim,
+                  transform: [{ translateY: slideAnim1 }],
+                },
+              ]}
+            >
+              <Animated.View
+                style={[
+                  styles.inputContainer,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                  {
+                    transform: [{ translateY: slideAnim2 }],
+                  },
+                ]}
+              >
                 <Ionicons name="person" size={20} color={colors.primary} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -75,9 +293,17 @@ export default function RegisterScreen() {
                   onChangeText={setName}
                   autoCapitalize="words"
                 />
-              </View>
+              </Animated.View>
 
-              <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Animated.View
+                style={[
+                  styles.inputContainer,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                  {
+                    transform: [{ translateY: slideAnim3 }],
+                  },
+                ]}
+              >
                 <Ionicons name="mail" size={20} color={colors.primary} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -88,9 +314,17 @@ export default function RegisterScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
-              </View>
+              </Animated.View>
 
-              <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Animated.View
+                style={[
+                  styles.inputContainer,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                  {
+                    transform: [{ translateY: slideAnim4 }],
+                  },
+                ]}
+              >
                 <Ionicons name="lock-closed" size={20} color={colors.primary} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -110,9 +344,17 @@ export default function RegisterScreen() {
                     color={colors.primary}
                   />
                 </TouchableOpacity>
-              </View>
+              </Animated.View>
 
-              <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Animated.View
+                style={[
+                  styles.inputContainer,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                  {
+                    transform: [{ translateY: slideAnim5 }],
+                  },
+                ]}
+              >
                 <Ionicons name="lock-closed" size={20} color={colors.primary} />
                 <TextInput
                   style={[styles.input, { color: colors.text }]}
@@ -132,21 +374,41 @@ export default function RegisterScreen() {
                     color={colors.primary}
                   />
                 </TouchableOpacity>
-              </View>
+              </Animated.View>
 
-              <TouchableOpacity style={[styles.registerButton, { backgroundColor: colors.primary }]} onPress={handleRegister}>
-                <Text style={styles.registerButtonText}>Kaydol</Text>
-              </TouchableOpacity>
+              <Animated.View
+                style={{
+                  transform: [{ scale: buttonScale }],
+                }}
+              >
+                <TouchableOpacity
+                  style={[styles.registerButton, { backgroundColor: colors.primary }]}
+                  onPress={handleRegister}
+                  onPressIn={handlePressIn}
+                  onPressOut={handlePressOut}
+                  activeOpacity={0.9}
+                >
+                  <LinearGradient
+                    colors={[colors.primary, colors.primary + 'dd']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.registerButtonGradient}
+                  >
+                    <Text style={styles.registerButtonText}>Kaydol</Text>
+                    <Ionicons name="person-add" size={20} color="white" style={{ marginLeft: 8 }} />
+                  </LinearGradient>
+                </TouchableOpacity>
+              </Animated.View>
 
               <TouchableOpacity
                 style={styles.loginButton}
                 onPress={() => navigation.navigate('Login' as never)}
               >
-                <Text style={[styles.loginButtonText, { color: colors.primary }]}>
-                  Zaten hesabın var mı? Giriş Yap
+                <Text style={[styles.loginButtonText, { color: colors.textSecondary }]}>
+                  Zaten hesabın var mı? <Text style={[styles.loginButtonTextBold, { color: colors.primary }]}>Giriş Yap</Text>
                 </Text>
               </TouchableOpacity>
-            </View>
+            </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>
       </LinearGradient>
@@ -160,11 +422,49 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
+    position: 'relative',
+  },
+  headerPattern: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    top: 0,
+    left: 0,
+    overflow: 'hidden',
+    zIndex: 0,
+  },
+  circle1: {
+    position: 'absolute',
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    top: -70,
+    left: -50,
+  },
+  circle2: {
+    position: 'absolute',
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    bottom: -45,
+    right: -35,
+  },
+  circle3: {
+    position: 'absolute',
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    top: 120,
+    right: 40,
   },
   content: {
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 20,
+    zIndex: 1,
   },
   logoContainer: {
     alignItems: 'center',
@@ -172,61 +472,96 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   logoText: {
-    fontSize: 36,
+    fontSize: 42,
     fontWeight: 'bold',
     color: 'white',
-    marginTop: 10,
+    marginTop: 15,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+    letterSpacing: 1,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 17,
     color: 'white',
-    opacity: 0.9,
-    marginTop: 5,
+    opacity: 0.95,
+    marginTop: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   formContainer: {
-    borderRadius: 20,
+    borderRadius: 25,
     padding: 30,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 10,
+      height: 15,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOpacity: 0.3,
+    shadowRadius: 25,
+    elevation: 15,
+    marginBottom: 20,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    marginBottom: 20,
+    borderWidth: 1.5,
+    borderRadius: 15,
+    paddingHorizontal: 18,
+    marginBottom: 18,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   input: {
     flex: 1,
-    paddingVertical: 15,
-    paddingHorizontal: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
     fontSize: 16,
   },
   eyeButton: {
     padding: 5,
   },
   registerButton: {
-    borderRadius: 12,
-    paddingVertical: 15,
-    alignItems: 'center',
+    borderRadius: 15,
     marginBottom: 20,
+    overflow: 'hidden',
+    shadowColor: '#3b82f6',
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  registerButtonGradient: {
+    flexDirection: 'row',
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   registerButtonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   loginButton: {
     alignItems: 'center',
+    paddingVertical: 10,
   },
   loginButtonText: {
     fontSize: 16,
+  },
+  loginButtonTextBold: {
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
 });
