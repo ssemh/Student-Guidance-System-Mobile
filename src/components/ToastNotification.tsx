@@ -81,7 +81,12 @@ export default function ToastNotification({
 
   if (!visible) return null;
 
-  const getToastConfig = () => {
+  const getToastConfig = (): {
+    icon: string;
+    gradientColors: [string, string, ...string[]];
+    iconColor: string;
+    bgColor: string;
+  } => {
     switch (type) {
       case 'success':
         return {
