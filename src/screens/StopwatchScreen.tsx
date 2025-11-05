@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function StopwatchScreen() {
+  const { colors } = useTheme();
   const [time, setTime] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
 
@@ -52,7 +54,7 @@ export default function StopwatchScreen() {
   const formattedTime = formatTime(time);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.card}>
         {/* Header */}
         <View style={styles.header}>

@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useToast } from '../contexts/ToastContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Assignment {
   id: string;
@@ -25,6 +26,7 @@ interface Assignment {
 }
 
 export default function AssignmentsScreen() {
+  const { colors, isDarkMode } = useTheme();
   const { showToast } = useToast();
   const [assignments, setAssignments] = useState<Assignment[]>([
     {
@@ -190,7 +192,7 @@ export default function AssignmentsScreen() {
   const totalCount = assignments.length;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient
           colors={['#4ECDC4', '#44A08D']}
@@ -258,7 +260,7 @@ export default function AssignmentsScreen() {
           {/* Ödev Listesi */}
           <View style={styles.assignmentsContainer}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Ödevlerim</Text>
+              <Text style={[styles.sectionTitle, { color: isDarkMode ? '#60a5fa' : '#1e40af' }]}>Ödevlerim</Text>
             </View>
 
             {assignments.map((assignment) => (

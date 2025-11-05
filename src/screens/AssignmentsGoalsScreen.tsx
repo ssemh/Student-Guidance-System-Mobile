@@ -1250,8 +1250,12 @@ export default function AssignmentsGoalsScreen() {
                               {homework.title}
                             </Text>
                             {allCompletedForDetail && (
-                              <View style={styles.completedBadge}>
-                                <Text style={styles.completedBadgeText}>Tamamlandı</Text>
+                              <View style={[styles.completedBadge, { 
+                                backgroundColor: isDarkMode ? 'rgba(30, 64, 175, 0.2)' : '#E0E7FF' 
+                              }]}>
+                                <Text style={[styles.completedBadgeText, { 
+                                  color: isDarkMode ? '#60a5fa' : '#1e40af' 
+                                }]}>Tamamlandı</Text>
                               </View>
                             )}
                           </View>
@@ -1286,7 +1290,7 @@ export default function AssignmentsGoalsScreen() {
                                 return item.day === day && item.time === timeSlot;
                               });
                               const item = key ? homeworkData[key] : null;
-                              const isCompleted = item && homework.completedItems && homework.completedItems[key];
+                              const isCompleted = item && key && homework.completedItems && homework.completedItems[key];
                               
                               return (
                                 <TouchableOpacity
@@ -1299,7 +1303,7 @@ export default function AssignmentsGoalsScreen() {
                                       borderColor: isCompleted ? '#10B981' : colors.border 
                                     }
                                   ]}
-                                  onPress={() => item && toggleHomeworkItem(homework.id, key)}
+                                  onPress={() => item && key && toggleHomeworkItem(homework.id, key)}
                                   disabled={!item}
                                   activeOpacity={0.7}
                                 >
@@ -1316,7 +1320,7 @@ export default function AssignmentsGoalsScreen() {
                                         {item.homework}
                                       </Text>
                                       {isCompleted && (
-                                        <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+                                        <Ionicons name="checkmark-circle" size={20} color={isDarkMode ? '#60a5fa' : '#1e40af'} />
                                       )}
                                     </View>
                                   ) : (
@@ -1378,7 +1382,7 @@ export default function AssignmentsGoalsScreen() {
                           activeOpacity={0.7}
                         >
                           {allCompleted ? (
-                            <View style={[styles.homeworkItemIcon, { backgroundColor: '#10B981' }]}>
+                            <View style={[styles.homeworkItemIcon, { backgroundColor: isDarkMode ? '#1e40af' : '#1e40af' }]}>
                               <Ionicons name="checkmark-circle" size={24} color="white" />
                             </View>
                           ) : (
@@ -1408,7 +1412,7 @@ export default function AssignmentsGoalsScreen() {
                             <View style={[
                               styles.homeworkItemBadge,
                               { 
-                                backgroundColor: allCompleted ? '#D1FAE5' : '#F3F4F6'
+                                backgroundColor: allCompleted ? (isDarkMode ? 'rgba(16, 185, 129, 0.2)' : '#D1FAE5') : (isDarkMode ? 'rgba(30, 64, 175, 0.2)' : '#F3F4F6')
                               }
                             ]}>
                               {allCompleted ? (
@@ -1418,8 +1422,8 @@ export default function AssignmentsGoalsScreen() {
                                 </>
                               ) : (
                                 <>
-                                  <Ionicons name="time-outline" size={12} color="#6B7280" />
-                                  <Text style={[styles.homeworkItemBadgeText, { color: '#6B7280' }]}>Kaydedildi</Text>
+                                  <Ionicons name="time-outline" size={12} color={isDarkMode ? '#60a5fa' : '#1e40af'} />
+                                  <Text style={[styles.homeworkItemBadgeText, { color: isDarkMode ? '#60a5fa' : '#1e40af' }]}>Kaydedildi</Text>
                                 </>
                               )}
                             </View>
@@ -1487,96 +1491,179 @@ export default function AssignmentsGoalsScreen() {
                       }
                       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
                     })
-                    .map((goal, index) => (
-                    <View 
-                      key={goal.id} 
-                      style={[
-                        styles.goalItem,
-                        { 
-                          backgroundColor: goal.completed 
-                            ? (isDarkMode ? '#1a1a1a' : '#f9fafb') 
-                            : colors.surface,
-                          borderColor: goal.completed ? colors.border : (index % 2 === 0 ? '#4ECDC4' : '#3b82f6'),
-                          borderLeftWidth: goal.completed ? 1 : 4
-                        },
-                        goal.completed && { opacity: 0.7 }
-                      ]}
-                    >
-                      <View style={styles.goalLeftContent}>
-                        {!goal.completed && (
+                    .map((goal, index) => {
+                      if (goal.completed) {
+                        return (
                           <LinearGradient
-                            colors={index % 2 === 0 ? ['#4ECDC4', '#44A08D'] : ['#3b82f6', '#2563eb']}
-                            style={styles.goalIconContainer}
-                          >
-                            <Ionicons name="flag" size={20} color="white" />
-                          </LinearGradient>
-                        )}
-                        {goal.completed && (
-                          <View style={styles.goalIconContainerCompleted}>
-                            <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-                          </View>
-                        )}
-                        <View style={styles.goalInfo}>
-                          <Text style={[
-                            styles.goalTitle,
-                            { 
-                              color: goal.completed 
-                                ? (isDarkMode ? '#9ca3af' : '#9CA3AF')
-                                : colors.text,
-                              textDecorationLine: goal.completed ? 'line-through' : 'none'
-                            }
-                          ]}>{goal.title}</Text>
-                          {goal.description && (
-                            <Text style={[
-                              styles.goalDescription,
-                              { 
-                                color: goal.completed 
-                                  ? (isDarkMode ? '#6b7280' : '#D1D5DB')
-                                  : colors.textSecondary,
-                                textDecorationLine: goal.completed ? 'line-through' : 'none'
+                            key={goal.id}
+                            colors={isDarkMode ? ['#1e3a8a', '#1e40af', '#3b82f6'] : ['#E0E7FF', '#DBEAFE', '#EFF6FF']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={[
+                              styles.goalItem,
+                              {
+                                borderColor: isDarkMode ? 'rgba(96, 165, 250, 0.3)' : 'rgba(30, 64, 175, 0.2)',
+                                borderWidth: 1,
+                                borderLeftWidth: 4,
+                                borderLeftColor: isDarkMode ? '#60a5fa' : '#1e40af',
+                                shadowColor: isDarkMode ? '#60a5fa' : '#1e40af',
+                                shadowOpacity: isDarkMode ? 0.3 : 0.2,
+                                shadowRadius: 8,
+                                elevation: 5,
                               }
-                            ]}>{goal.description}</Text>
-                          )}
-                          <View style={styles.goalFooter}>
-                            <View style={styles.goalDateContainer}>
-                              <Ionicons name="calendar-outline" size={12} color={colors.textSecondary} />
-                              <Text style={[
-                                styles.goalDate,
-                                { 
-                                  color: goal.completed 
-                                    ? (isDarkMode ? '#6b7280' : '#D1D5DB')
-                                    : colors.textSecondary
+                            ]}
+                          >
+                            <View style={styles.goalLeftContent}>
+                              <View style={[
+                                styles.goalIconContainerCompleted,
+                                {
+                                  backgroundColor: isDarkMode ? 'rgba(96, 165, 250, 0.2)' : 'rgba(30, 64, 175, 0.15)',
+                                  borderWidth: 2,
+                                  borderColor: isDarkMode ? '#60a5fa' : '#1e40af',
                                 }
                               ]}>
-                                {new Date(goal.createdAt).toLocaleDateString('tr-TR', { 
-                                  day: 'numeric', 
-                                  month: 'long', 
-                                  year: 'numeric' 
-                                })}
-                              </Text>
-                            </View>
-                            {goal.completed && (
-                              <View style={styles.completedBadge}>
-                                <Text style={styles.completedBadgeText}>Tamamlandı</Text>
+                                <Ionicons name="checkmark-circle" size={24} color={isDarkMode ? '#60a5fa' : '#1e40af'} />
                               </View>
-                            )}
+                              <View style={styles.goalInfo}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                  <Text style={[
+                                    styles.goalTitle,
+                                    { 
+                                      color: isDarkMode ? '#e0e7ff' : '#1e40af',
+                                      fontWeight: '700',
+                                      textDecorationLine: 'none'
+                                    }
+                                  ]}>{goal.title}</Text>
+                                  <View style={[styles.completedBadge, { 
+                                    backgroundColor: isDarkMode ? 'rgba(96, 165, 250, 0.25)' : 'rgba(30, 64, 175, 0.2)',
+                                    paddingHorizontal: 10,
+                                    paddingVertical: 4,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                  }]}>
+                                    <Ionicons name="trophy" size={12} color={isDarkMode ? '#60a5fa' : '#1e40af'} style={{ marginRight: 4 }} />
+                                    <Text style={[styles.completedBadgeText, { 
+                                      color: isDarkMode ? '#60a5fa' : '#1e40af',
+                                      fontSize: 11,
+                                      fontWeight: '700',
+                                    }]}>Tamamlandı</Text>
+                                  </View>
+                                </View>
+                                {goal.description && (
+                                  <Text style={[
+                                    styles.goalDescription,
+                                    { 
+                                      color: isDarkMode ? '#c7d2fe' : '#3b82f6',
+                                      textDecorationLine: 'none',
+                                      fontStyle: 'normal',
+                                    }
+                                  ]}>{goal.description}</Text>
+                                )}
+                                <View style={styles.goalFooter}>
+                                  <View style={styles.goalDateContainer}>
+                                    <Ionicons name="calendar-outline" size={12} color={isDarkMode ? '#93c5fd' : '#1e40af'} />
+                                    <Text style={[
+                                      styles.goalDate,
+                                      { 
+                                        color: isDarkMode ? '#93c5fd' : '#3b82f6'
+                                      }
+                                    ]}>
+                                      {new Date(goal.createdAt).toLocaleDateString('tr-TR', { 
+                                        day: 'numeric', 
+                                        month: 'long', 
+                                        year: 'numeric' 
+                                      })}
+                                    </Text>
+                                  </View>
+                                </View>
+                              </View>
+                            </View>
+                            <TouchableOpacity 
+                              style={[
+                                styles.completionButton,
+                                { 
+                                  borderColor: isDarkMode ? '#60a5fa' : '#1e40af',
+                                  backgroundColor: isDarkMode ? '#1e40af' : '#1e40af',
+                                  borderWidth: 2,
+                                },
+                              ]}
+                              onPress={() => toggleGoalCompletion(goal.id)}
+                            >
+                              <Ionicons name="checkmark" size={18} color="white" />
+                            </TouchableOpacity>
+                          </LinearGradient>
+                        );
+                      } else {
+                        return (
+                          <View
+                            key={goal.id}
+                            style={[
+                              styles.goalItem,
+                              {
+                                backgroundColor: colors.surface,
+                                borderColor: index % 2 === 0 ? '#4ECDC4' : '#3b82f6',
+                                borderLeftWidth: 4
+                              }
+                            ]}
+                          >
+                            <View style={styles.goalLeftContent}>
+                              <LinearGradient
+                                colors={index % 2 === 0 ? ['#4ECDC4', '#44A08D'] : ['#3b82f6', '#2563eb']}
+                                style={styles.goalIconContainer}
+                              >
+                                <Ionicons name="flag" size={20} color="white" />
+                              </LinearGradient>
+                              <View style={styles.goalInfo}>
+                                <Text style={[
+                                  styles.goalTitle,
+                                  { 
+                                    color: colors.text,
+                                    textDecorationLine: 'none'
+                                  }
+                                ]}>{goal.title}</Text>
+                                {goal.description && (
+                                  <Text style={[
+                                    styles.goalDescription,
+                                    { 
+                                      color: colors.textSecondary,
+                                      textDecorationLine: 'none'
+                                    }
+                                  ]}>{goal.description}</Text>
+                                )}
+                                <View style={styles.goalFooter}>
+                                  <View style={styles.goalDateContainer}>
+                                    <Ionicons name="calendar-outline" size={12} color={colors.textSecondary} />
+                                    <Text style={[
+                                      styles.goalDate,
+                                      { 
+                                        color: colors.textSecondary
+                                      }
+                                    ]}>
+                                      {new Date(goal.createdAt).toLocaleDateString('tr-TR', { 
+                                        day: 'numeric', 
+                                        month: 'long', 
+                                        year: 'numeric' 
+                                      })}
+                                    </Text>
+                                  </View>
+                                </View>
+                              </View>
+                            </View>
+                            <TouchableOpacity 
+                              style={[
+                                styles.completionButton,
+                                { 
+                                  borderColor: colors.border,
+                                  backgroundColor: isDarkMode ? colors.card : 'white'
+                                },
+                              ]}
+                              onPress={() => toggleGoalCompletion(goal.id)}
+                            >
+                            </TouchableOpacity>
                           </View>
-                        </View>
-                      </View>
-                      <TouchableOpacity 
-                        style={[
-                          styles.completionButton,
-                          { borderColor: goal.completed ? '#10B981' : colors.border },
-                          goal.completed && styles.completedButton
-                        ]}
-                        onPress={() => toggleGoalCompletion(goal.id)}
-                      >
-                        {goal.completed && (
-                          <Ionicons name="checkmark" size={18} color="white" />
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  ))}
+                        );
+                      }
+                    })}
                 </ScrollView>
               ) : (
                 <View style={styles.emptyState}>

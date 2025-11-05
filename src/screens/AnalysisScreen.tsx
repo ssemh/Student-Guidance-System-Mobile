@@ -32,7 +32,7 @@ interface AnalysisResult {
 }
 
 export default function AnalysisScreen() {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const { showToast } = useToast();
   const [analysisType, setAnalysisType] = useState<'konu' | 'deneme'>('konu');
   const [selectedSubject, setSelectedSubject] = useState('');
@@ -1100,19 +1100,19 @@ export default function AnalysisScreen() {
             </View>
             
             <LinearGradient
-              colors={['#ffffff', '#f9fafb']}
+              colors={isDarkMode ? [colors.card, colors.surface] : ['#ffffff', '#f9fafb']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.scoreCard}
             >
-              <View style={styles.scoreIconContainer}>
+              <View style={[styles.scoreIconContainer, { backgroundColor: isDarkMode ? colors.surface : '#f3f4f6' }]}>
                 <Ionicons name="stats-chart" size={32} color={getScoreColor(score)} />
               </View>
-              <Text style={styles.scoreLabel}>Başarı Oranı</Text>
+              <Text style={[styles.scoreLabel, { color: colors.textSecondary }]}>Başarı Oranı</Text>
               <Text style={[styles.scoreValue, { color: getScoreColor(score) }]}>
                 %{score}
               </Text>
-              <View style={styles.scoreBar}>
+              <View style={[styles.scoreBar, { backgroundColor: isDarkMode ? colors.border : '#e5e7eb' }]}>
                 <LinearGradient
                   colors={score >= 80 ? ['#10b981', '#059669'] : score >= 60 ? ['#f59e0b', '#d97706'] : ['#ef4444', '#dc2626']}
                   start={{ x: 0, y: 0 }}
@@ -1123,63 +1123,63 @@ export default function AnalysisScreen() {
             </LinearGradient>
 
             <LinearGradient
-              colors={['#ffffff', '#f9fafb']}
+              colors={isDarkMode ? [colors.card, colors.surface] : ['#ffffff', '#f9fafb']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.netCard}
             >
-              <View style={styles.netIconContainer}>
+              <View style={[styles.netIconContainer, { backgroundColor: isDarkMode ? colors.surface : '#f3f4f6' }]}>
                 <Ionicons name="calculator" size={32} color={getScoreColor(score)} />
               </View>
-              <Text style={styles.netLabel}>Net Sayısı</Text>
+              <Text style={[styles.netLabel, { color: colors.textSecondary }]}>Net Sayısı</Text>
               <Text style={[styles.netValue, { color: getScoreColor(score) }]}>
                 {calculateNet().toFixed(2)}
               </Text>
-              <Text style={styles.netDescription}>
+              <Text style={[styles.netDescription, { color: colors.textSecondary }]}>
                 4 yanlış = 1 doğru götürür
               </Text>
             </LinearGradient>
 
             <View style={styles.statsGrid}>
               <LinearGradient
-                colors={['#ffffff', '#f0fdf4']}
+                colors={isDarkMode ? [colors.card, colors.surface] : ['#ffffff', '#f0fdf4']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.statCard}
               >
-                <View style={[styles.statIconContainer, { backgroundColor: '#d1fae5' }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.2)' : '#d1fae5' }]}>
                   <Ionicons name="checkmark-circle" size={28} color="#10b981" />
                 </View>
-                <Text style={styles.statNumber}>{correctAnswers || 0}</Text>
-                <Text style={styles.statLabel}>Doğru</Text>
+                <Text style={[styles.statNumber, { color: colors.text }]}>{correctAnswers || 0}</Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Doğru</Text>
               </LinearGradient>
               
               <LinearGradient
-                colors={['#ffffff', '#fef2f2']}
+                colors={isDarkMode ? [colors.card, colors.surface] : ['#ffffff', '#fef2f2']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.statCard}
               >
-                <View style={[styles.statIconContainer, { backgroundColor: '#fee2e2' }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: isDarkMode ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2' }]}>
                   <Ionicons name="close-circle" size={28} color="#ef4444" />
                 </View>
-                <Text style={styles.statNumber}>{wrongAnswers || 0}</Text>
-                <Text style={styles.statLabel}>Yanlış</Text>
+                <Text style={[styles.statNumber, { color: colors.text }]}>{wrongAnswers || 0}</Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Yanlış</Text>
               </LinearGradient>
               
               <LinearGradient
-                colors={['#ffffff', '#f9fafb']}
+                colors={isDarkMode ? [colors.card, colors.surface] : ['#ffffff', '#f9fafb']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.statCard}
               >
-                <View style={[styles.statIconContainer, { backgroundColor: '#f3f4f6' }]}>
-                  <Ionicons name="help-circle" size={28} color="#6b7280" />
+                <View style={[styles.statIconContainer, { backgroundColor: isDarkMode ? colors.surface : '#f3f4f6' }]}>
+                  <Ionicons name="help-circle" size={28} color={colors.textSecondary} />
                 </View>
-                <Text style={styles.statNumber}>
+                <Text style={[styles.statNumber, { color: colors.text }]}>
                   {(parseInt(totalQuestions) || 0) - (parseInt(correctAnswers) || 0) - (parseInt(wrongAnswers) || 0)}
                 </Text>
-                <Text style={styles.statLabel}>Boş</Text>
+                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Boş</Text>
               </LinearGradient>
             </View>
 
@@ -1424,7 +1424,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1f2937',
   },
   analysisTypeSelector: {
     marginBottom: 25,

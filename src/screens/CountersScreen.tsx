@@ -13,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useToast } from '../contexts/ToastContext';
-
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Counter {
   id: string;
@@ -24,6 +24,7 @@ interface Counter {
 }
 
 export default function CountersScreen() {
+  const { colors } = useTheme();
   const { showToast } = useToast();
   const [counters, setCounters] = useState<Counter[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -137,7 +138,7 @@ export default function CountersScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
               <LinearGradient
                 colors={['#3b82f6', '#1e40af', '#7c3aed']}
                 start={{ x: 0, y: 0 }}
